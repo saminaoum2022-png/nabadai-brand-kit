@@ -48,11 +48,6 @@ function LogoLoader() {
           0%, 100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 12px #00b4d8); }
           50% { transform: scale(1.08); opacity: 0.85; filter: drop-shadow(0 0 28px #00b4d8) drop-shadow(0 0 48px #2255cc); }
         }
-        @keyframes particle {
-          0% { transform: translate(0, 0) scale(1); opacity: 1; }
-          50% { transform: translate(var(--tx), var(--ty)) scale(1.5); opacity: 0.6; }
-          100% { transform: translate(0, 0) scale(1); opacity: 1; }
-        }
         @keyframes fadeMsg {
           0% { opacity: 0; transform: translateY(8px); }
           15% { opacity: 1; transform: translateY(0); }
@@ -60,10 +55,10 @@ function LogoLoader() {
           100% { opacity: 0; transform: translateY(-8px); }
         }
         @keyframes scanLine {
-          0% { transform: translateY(-120px) rotate(-30deg); opacity: 0; }
+          0% { transform: translateY(-120px); opacity: 0; }
           20% { opacity: 0.6; }
           80% { opacity: 0.6; }
-          100% { transform: translateY(120px) rotate(-30deg); opacity: 0; }
+          100% { transform: translateY(120px); opacity: 0; }
         }
         .ring1-wrap { animation: ring1 3.2s ease-in-out infinite; transform-origin: center; }
         .ring2-wrap { animation: ring2 3.8s ease-in-out infinite; transform-origin: center; }
@@ -97,7 +92,7 @@ function LogoLoader() {
           />
         </div>
 
-        {/* Ring 2 - mid (counter rotate) */}
+        {/* Ring 2 - mid */}
         <div className="ring2-wrap" style={{ position: "absolute", inset: 20 }}>
           <img
             src="https://cdn.shopify.com/s/files/1/0822/6953/6481/files/download_1775583690592_faf21f31-373e-4e61-bb01-04c13f1bce34.jpg?v=1775654198"
@@ -106,7 +101,7 @@ function LogoLoader() {
           />
         </div>
 
-        {/* Ring 3 - inner core */}
+        {/* Ring 3 - inner */}
         <div className="ring3-wrap" style={{ position: "absolute", inset: 40 }}>
           <img
             src="https://cdn.shopify.com/s/files/1/0822/6953/6481/files/download_1775583690592_faf21f31-373e-4e61-bb01-04c13f1bce34.jpg?v=1775654198"
@@ -115,7 +110,7 @@ function LogoLoader() {
           />
         </div>
 
-        {/* Core pulse overlay */}
+        {/* Core pulse */}
         <div className="core-wrap" style={{
           position: "absolute", inset: 70, borderRadius: "50%",
           background: "radial-gradient(circle, rgba(0,180,216,0.3) 0%, transparent 70%)",
@@ -166,11 +161,14 @@ export default function Home() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const [res] = await Promise.all([
+        fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        }),
+        new Promise((resolve) => setTimeout(resolve, 5000)),
+      ]);
       const data = await res.json();
       localStorage.setItem("brandKit", JSON.stringify({ ...data, brandName: form.brandName, style: form.style }));
       router.push("/result");
@@ -179,8 +177,6 @@ export default function Home() {
       setLoading(false);
     }
   };
-
-  if (loading) return <LogoLoader />;
 
   const inputStyle = {
     width: "100%", padding: "12px 16px", borderRadius: 8, border: "1px solid #1a3a6a",
