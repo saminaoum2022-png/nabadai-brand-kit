@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import html2pdf from "html2pdf.js";
+
 
 export default function Result() {
   const [kit, setKit] = useState(null);
