@@ -9,6 +9,17 @@ export default function Result() {
     const data = localStorage.getItem("brandKit");
     if (data) setKit(JSON.parse(data));
   }, []);
+const downloadPDF = () => {
+  const element = document.getElementById("brand-kit");
+  const opt = {
+    margin: 10,
+    filename: `${kit.brandName}-brand-kit.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+  };
+  html2pdf().set(opt).from(element).save();
+};
 
   if (!kit) return (
     <div style={{ minHeight: "100vh", background: "#f0f6ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
