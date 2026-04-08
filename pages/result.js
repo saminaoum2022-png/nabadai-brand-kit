@@ -2,55 +2,112 @@ import { useEffect, useState, useRef } from "react";
 
 const LOGO_STYLES = [
   {
-    name: "Hexagon Badge",
+    name: "Neon Slash",
     render: (letters, color1, color2, font) => `
-      <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+      <svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:${color1}"/>
             <stop offset="100%" style="stop-color:${color2}"/>
           </linearGradient>
+          <filter id="glow1">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <clipPath id="clip1">
+            <rect x="0" y="0" width="180" height="180" rx="20"/>
+          </clipPath>
         </defs>
-        <polygon points="80,8 148,44 148,116 80,152 12,116 12,44" fill="url(#g1)" stroke="${color2}" stroke-width="2"/>
-        <polygon points="80,20 136,52 136,108 80,140 24,108 24,52" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-        <text x="80" y="95" text-anchor="middle" font-family="${font}, sans-serif" font-size="52" font-weight="900" fill="white">${letters}</text>
+        <rect width="180" height="180" rx="20" fill="#050d1a"/>
+        <rect width="180" height="180" rx="20" fill="none" stroke="url(#g1)" stroke-width="2"/>
+        <!-- Diagonal slash accent -->
+        <line x1="120" y1="10" x2="60" y2="170" stroke="${color2}" stroke-width="3" opacity="0.3" filter="url(#glow1)"/>
+        <line x1="135" y1="10" x2="75" y2="170" stroke="${color2}" stroke-width="1" opacity="0.15"/>
+        <!-- Letters with glow -->
+        <text x="90" y="115" text-anchor="middle" font-family="${font}, Arial Black, sans-serif" font-size="80" font-weight="900" fill="url(#g1)" filter="url(#glow1)" letter-spacing="-4">${letters}</text>
+        <!-- Bottom accent line -->
+        <rect x="30" y="148" width="120" height="3" rx="2" fill="url(#g1)" opacity="0.8" filter="url(#glow1)"/>
+        <!-- Corner dots -->
+        <circle cx="20" cy="20" r="3" fill="${color2}" opacity="0.6"/>
+        <circle cx="160" cy="160" r="3" fill="${color1}" opacity="0.6"/>
       </svg>
     `,
   },
   {
-    name: "Circle Monogram",
+    name: "Split Depth",
     render: (letters, color1, color2, font) => `
-      <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+      <svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:${color1}"/>
             <stop offset="100%" style="stop-color:${color2}"/>
           </linearGradient>
+          <linearGradient id="g2b" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:${color2};stop-opacity:0.2"/>
+            <stop offset="100%" style="stop-color:${color1};stop-opacity:0.05"/>
+          </linearGradient>
+          <filter id="glow2">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <clipPath id="clip2top">
+            <rect x="0" y="0" width="180" height="88"/>
+          </clipPath>
+          <clipPath id="clip2bot">
+            <rect x="0" y="92" width="180" height="88"/>
+          </clipPath>
         </defs>
-        <circle cx="80" cy="80" r="72" fill="url(#g2)"/>
-        <circle cx="80" cy="80" r="64" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
-        <circle cx="80" cy="80" r="56" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-        <text x="80" y="97" text-anchor="middle" font-family="${font}, sans-serif" font-size="56" font-weight="900" fill="white" letter-spacing="-2">${letters}</text>
+        <rect width="180" height="180" rx="20" fill="#050d1a"/>
+        <!-- Background grid lines -->
+        <line x1="0" y1="60" x2="180" y2="60" stroke="${color1}" stroke-width="0.5" opacity="0.1"/>
+        <line x1="0" y1="120" x2="180" y2="120" stroke="${color1}" stroke-width="0.5" opacity="0.1"/>
+        <line x1="60" y1="0" x2="60" y2="180" stroke="${color1}" stroke-width="0.5" opacity="0.1"/>
+        <line x1="120" y1="0" x2="120" y2="180" stroke="${color1}" stroke-width="0.5" opacity="0.1"/>
+        <!-- Shadow/depth letter (offset) -->
+        <text x="94" y="114" text-anchor="middle" font-family="${font}, Arial Black, sans-serif" font-size="82" font-weight="900" fill="${color1}" opacity="0.15" letter-spacing="-4">${letters}</text>
+        <!-- Top half of letter in color -->
+        <text x="90" y="112" text-anchor="middle" font-family="${font}, Arial Black, sans-serif" font-size="82" font-weight="900" fill="url(#g2)" clip-path="url(#clip2top)" letter-spacing="-4">${letters}</text>
+        <!-- Bottom half slightly offset + dimmed -->
+        <text x="92" y="112" text-anchor="middle" font-family="${font}, Arial Black, sans-serif" font-size="82" font-weight="900" fill="${color2}" opacity="0.4" clip-path="url(#clip2bot)" letter-spacing="-4">${letters}</text>
+        <!-- Split line with glow -->
+        <rect x="20" y="89" width="140" height="2" rx="1" fill="url(#g2)" filter="url(#glow2)"/>
+        <!-- Border -->
+        <rect width="180" height="180" rx="20" fill="none" stroke="${color2}" stroke-width="1.5" opacity="0.4"/>
       </svg>
     `,
   },
   {
-    name: "Geometric Modern",
+    name: "Outlined Glow",
     render: (letters, color1, color2, font) => `
-      <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+      <svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:${color1}"/>
             <stop offset="100%" style="stop-color:${color2}"/>
           </linearGradient>
+          <filter id="glow3a">
+            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="glow3b">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
         </defs>
-        <rect x="8" y="8" width="144" height="144" rx="24" fill="url(#g3)"/>
-        <rect x="8" y="108" width="144" height="44" rx="0" fill="rgba(0,0,0,0.25)"/>
-        <rect x="8" y="132" width="144" height="20" rx="0" ry="0" fill="rgba(0,0,0,0.15)"/>
-        <rect x="8" y="148" width="144" height="4" rx="0" fill="${color2}" opacity="0.8"/>
-        <text x="80" y="90" text-anchor="middle" font-family="${font}, sans-serif" font-size="64" font-weight="900" fill="white">${letters}</text>
-        <rect x="30" y="108" width="100" height="1.5" fill="rgba(255,255,255,0.3)"/>
-        <text x="80" y="130" text-anchor="middle" font-family="${font}, sans-serif" font-size="11" font-weight="600" fill="rgba(255,255,255,0.7)" letter-spacing="4">BRAND</text>
+        <rect width="180" height="180" rx="20" fill="#050d1a"/>
+        <!-- Outer glow ring -->
+        <circle cx="90" cy="90" r="75" fill="none" stroke="${color2}" stroke-width="1" opacity="0.2" filter="url(#glow3a)"/>
+        <circle cx="90" cy="90" r="68" fill="none" stroke="${color1}" stroke-width="0.5" opacity="0.3"/>
+        <!-- Glow behind letter -->
+        <text x="90" y="115" text-anchor="middle" font-family="${font}, Arial Black, sans-serif" font-size="86" font-weight="900" fill="${color2}" opacity="0.15" filter="url(#glow3a)" letter-spacing="-4">${letters}</text>
+        <!-- Outlined letter (stroke only) -->
+        <text x="90" y="115" text-anchor="middle" font-family="${font}, Arial Black, sans-serif" font-size="86" font-weight="900" fill="none" stroke="url(#g3)" stroke-width="2" filter="url(#glow3b)" letter-spacing="-4">${letters}</text>
+        <!-- Solid letter on top slightly smaller -->
+        <text x="90" y="115" text-anchor="middle" font-family="${font}, Arial Black, sans-serif" font-size="86" font-weight="900" fill="url(#g3)" opacity="0.9" letter-spacing="-4">${letters}</text>
+        <!-- Arc accent top -->
+        <path d="M 40 40 Q 90 10 140 40" fill="none" stroke="${color2}" stroke-width="1.5" opacity="0.4" filter="url(#glow3b)"/>
+        <!-- Arc accent bottom -->
+        <path d="M 40 140 Q 90 170 140 140" fill="none" stroke="${color1}" stroke-width="1.5" opacity="0.4" filter="url(#glow3b)"/>
       </svg>
     `,
   },
@@ -65,8 +122,16 @@ export default function Result() {
     if (data) setKit(JSON.parse(data));
   }, []);
 
-  const handleDownload = () => {
-    window.print();
+  const handleDownload = () => window.print();
+
+  const downloadSVG = (svgString, name) => {
+    const blob = new Blob([svgString], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${name}-logo.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   if (!kit) return (
@@ -89,10 +154,10 @@ export default function Result() {
   return (
     <>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=${(kit.fonts?.[0] || "Inter").replace(/ /g, "+")}:wght@400;700;900&family=${(kit.fonts?.[1] || "Inter").replace(/ /g, "+")}:wght@400;700&display=swap');
         @media print {
           body { background: #050d1a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .no-print { display: none !important; }
-          .print-page { page-break-after: always; }
         }
       `}</style>
 
@@ -112,18 +177,25 @@ export default function Result() {
           <div style={sectionStyle}>
             <h2 style={headingStyle}>LETTERMARK LOGO CONCEPTS</h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
-              {LOGO_STYLES.map((logoStyle, i) => (
-                <div key={i} style={{ textAlign: "center" }}>
-                  <div style={{ background: "#050d1a", borderRadius: 12, padding: 20, marginBottom: 10, border: "1px solid #1a3a6a", display: "flex", alignItems: "center", justifyContent: "center" }}
-                    dangerouslySetInnerHTML={{ __html: logoStyle.render(letters, color1, color2, font) }}
-                  />
-                  <p style={{ color: "#5577aa", fontSize: 12, margin: 0 }}>{logoStyle.name}</p>
-                </div>
-              ))}
+              {LOGO_STYLES.map((logoStyle, i) => {
+                const svgString = logoStyle.render(letters, color1, color2, font);
+                return (
+                  <div key={i} style={{ textAlign: "center" }}>
+                    <div style={{ background: "#050d1a", borderRadius: 12, padding: 16, marginBottom: 10, border: "1px solid #1a3a6a", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      dangerouslySetInnerHTML={{ __html: svgString }}
+                    />
+                    <p style={{ color: "#5577aa", fontSize: 12, margin: "0 0 8px" }}>{logoStyle.name}</p>
+                    <button
+                      className="no-print"
+                      onClick={() => downloadSVG(svgString, `${kit.brandName}-${logoStyle.name}`)}
+                      style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #1a3a6a", background: "transparent", color: "#00b4d8", fontSize: 11, cursor: "pointer", fontWeight: 600 }}
+                    >
+                      ↓ Download SVG
+                    </button>
+                  </div>
+                );
+              })}
             </div>
-            <p style={{ color: "#3a5a8a", fontSize: 12, marginTop: 16, textAlign: "center" }}>
-              💡 These are SVG lettermarks — scalable to any size, ready to use
-            </p>
           </div>
 
           {/* Slogans */}
@@ -151,13 +223,21 @@ export default function Result() {
             </div>
           </div>
 
-          {/* Typography */}
+          {/* Typography - rendered in actual font */}
           <div style={sectionStyle}>
             <h2 style={headingStyle}>TYPOGRAPHY</h2>
-            {kit.fonts?.map((font, i) => (
-              <div key={i} style={{ padding: "20px 24px", background: "#050d1a", borderRadius: 10, marginBottom: 12, border: "1px solid #1a3a6a" }}>
-                <p style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#fff" }}>{font}</p>
-                <p style={{ margin: "6px 0 0", fontSize: 12, color: "#00b4d8", letterSpacing: 2 }}>{kit.fontRoles?.[i]}</p>
+            {kit.fonts?.map((fontName, i) => (
+              <div key={i} style={{ padding: "24px", background: "#050d1a", borderRadius: 10, marginBottom: 12, border: "1px solid #1a3a6a" }}>
+                <p style={{ margin: 0, fontSize: 11, color: "#00b4d8", letterSpacing: 3, fontWeight: 700, marginBottom: 10 }}>{kit.fontRoles?.[i]?.toUpperCase()}</p>
+                <p style={{ margin: 0, fontSize: 28, fontWeight: 700, color: "#fff", fontFamily: `'${fontName}', sans-serif` }}>
+                  {fontName}
+                </p>
+                <p style={{ margin: "8px 0 0", fontSize: 15, color: "#8899bb", fontFamily: `'${fontName}', sans-serif` }}>
+                  The quick brown fox jumps over the lazy dog
+                </p>
+                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#3a5a8a", fontFamily: `'${fontName}', sans-serif` }}>
+                  ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789
+                </p>
               </div>
             ))}
           </div>
@@ -184,7 +264,7 @@ export default function Result() {
             </div>
           </div>
 
-          {/* Download Button */}
+          {/* Download PDF Button */}
           <div className="no-print" style={{ textAlign: "center", marginTop: 40, marginBottom: 40 }}>
             <button
               onClick={handleDownload}
