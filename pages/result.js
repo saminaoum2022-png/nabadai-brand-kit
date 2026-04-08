@@ -25,6 +25,21 @@ export default function Result() {
           <p style={{ color: "#888" }}>Your custom brand kit is ready</p>
         </div>
 
+        {/* Logo Concepts */}
+        {kit.logos && (
+          <div style={{ background: "#1a1a2e", borderRadius: 16, padding: 32, marginBottom: 24, border: "1px solid #00d4ff22" }}>
+            <h2 style={{ color: "#00d4ff", marginBottom: 20, fontSize: 14, letterSpacing: 3 }}>AI LOGO CONCEPTS</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+              {kit.logos.map((url, i) => (
+                <div key={i} style={{ textAlign: "center" }}>
+                  <img src={url} alt={`Logo concept ${i + 1}`} style={{ width: "100%", borderRadius: 12, background: "#fff", padding: 8 }} />
+                  <p style={{ color: "#888", fontSize: 12, marginTop: 8 }}>Concept {i + 1}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Slogans */}
         <div style={{ background: "#1a1a2e", borderRadius: 16, padding: 32, marginBottom: 24, border: "1px solid #00d4ff22" }}>
           <h2 style={{ color: "#00d4ff", marginBottom: 20, fontSize: 14, letterSpacing: 3 }}>SLOGAN OPTIONS</h2>
