@@ -61,25 +61,35 @@ export default function Home() {
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} style={{
-      minHeight: "100vh", background: "#0a0a0f", color: "#fff",
-      fontFamily: "sans-serif", padding: "40px 20px",
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #e8f4ff 0%, #f0f8ff 50%, #e0f0ff 100%)",
+      color: "#1a1a2e",
+      fontFamily: "sans-serif",
+      padding: "40px 20px",
     }}>
       <div style={{ maxWidth: 600, margin: "0 auto" }}>
+
+        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 24 }}>
             <button onClick={() => setLang("en")} style={{
-              padding: "8px 20px", borderRadius: 20, border: "none", cursor: "pointer",
-              background: lang === "en" ? "#00d4ff" : "#1a1a2e", color: lang === "en" ? "#000" : "#fff",
+              padding: "8px 20px", borderRadius: 20, border: "2px solid #2255cc",
+              cursor: "pointer", fontWeight: "bold",
+              background: lang === "en" ? "#2255cc" : "transparent",
+              color: lang === "en" ? "#fff" : "#2255cc",
             }}>English</button>
             <button onClick={() => setLang("ar")} style={{
-              padding: "8px 20px", borderRadius: 20, border: "none", cursor: "pointer",
-              background: lang === "ar" ? "#00d4ff" : "#1a1a2e", color: lang === "ar" ? "#000" : "#fff",
+              padding: "8px 20px", borderRadius: 20, border: "2px solid #2255cc",
+              cursor: "pointer", fontWeight: "bold",
+              background: lang === "ar" ? "#2255cc" : "transparent",
+              color: lang === "ar" ? "#fff" : "#2255cc",
             }}>العربية</button>
           </div>
-          <h1 style={{ color: "#00d4ff", fontSize: 28, marginBottom: 8 }}>{t.title}</h1>
-          <p style={{ color: "#888" }}>{t.subtitle}</p>
+          <h1 style={{ color: "#2255cc", fontSize: 32, marginBottom: 8, fontWeight: 800 }}>{t.title}</h1>
+          <p style={{ color: "#5577aa" }}>{t.subtitle}</p>
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit}>
           {[
             { key: "brandName", label: t.q1 },
@@ -91,29 +101,35 @@ export default function Home() {
             { key: "mission", label: t.q7 },
           ].map(({ key, label }) => (
             <div key={key} style={{ marginBottom: 20 }}>
-              <label style={{ display: "block", marginBottom: 8, color: "#00d4ff" }}>{label}</label>
+              <label style={{ display: "block", marginBottom: 8, color: "#2255cc", fontWeight: 600 }}>{label}</label>
               <input
                 required
                 value={form[key]}
                 onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                 style={{
                   width: "100%", padding: "12px 16px", borderRadius: 8,
-                  background: "#1a1a2e", border: "1px solid #00d4ff33",
-                  color: "#fff", fontSize: 16, boxSizing: "border-box",
+                  background: "#ffffff", border: "2px solid #00b4d833",
+                  color: "#1a1a2e", fontSize: 16, boxSizing: "border-box",
+                  boxShadow: "0 2px 8px rgba(34,85,204,0.08)",
+                  outline: "none",
                 }}
               />
             </div>
           ))}
 
+          {/* Style selector */}
           <div style={{ marginBottom: 32 }}>
-            <label style={{ display: "block", marginBottom: 12, color: "#00d4ff" }}>{t.q8}</label>
+            <label style={{ display: "block", marginBottom: 12, color: "#2255cc", fontWeight: 600 }}>{t.q8}</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
               {t.styles.map((s, i) => (
                 <button key={i} type="button" onClick={() => setForm({ ...form, style: s })}
                   style={{
-                    padding: "10px 20px", borderRadius: 20, border: "1px solid #00d4ff",
-                    cursor: "pointer", background: form.style === s ? "#00d4ff" : "transparent",
-                    color: form.style === s ? "#000" : "#00d4ff",
+                    padding: "10px 20px", borderRadius: 20,
+                    border: "2px solid #2255cc",
+                    cursor: "pointer",
+                    background: form.style === s ? "#2255cc" : "#fff",
+                    color: form.style === s ? "#fff" : "#2255cc",
+                    fontWeight: 600,
                   }}>{s}</button>
               ))}
             </div>
@@ -121,12 +137,18 @@ export default function Home() {
 
           <button type="submit" disabled={loading} style={{
             width: "100%", padding: "16px", borderRadius: 8, border: "none",
-            background: loading ? "#333" : "#00d4ff", color: "#000",
-            fontSize: 18, fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer",
+            background: loading ? "#aac" : "linear-gradient(135deg, #2255cc, #00b4d8)",
+            color: "#fff", fontSize: 18, fontWeight: "bold",
+            cursor: loading ? "not-allowed" : "pointer",
+            boxShadow: "0 4px 20px rgba(34,85,204,0.3)",
           }}>
             {loading ? t.generating : t.submit}
           </button>
         </form>
+
+        <div style={{ textAlign: "center", marginTop: 24 }}>
+          <p style={{ color: "#aab", fontSize: 12 }}>Powered by NabadAi — AI-Powered Digital Agency</p>
+        </div>
       </div>
     </div>
   );
