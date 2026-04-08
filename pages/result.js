@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import html2pdf from "html2pdf.js";
-
 
 export default function Result() {
   const [kit, setKit] = useState(null);
@@ -9,17 +7,22 @@ export default function Result() {
     const data = localStorage.getItem("brandKit");
     if (data) setKit(JSON.parse(data));
   }, []);
-const downloadPDF = () => {
-  const element = document.getElementById("brand-kit");
-  const opt = {
-    margin: 10,
-    filename: `${kit.brandName}-brand-kit.pdf`,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+
+  const downloadPDF = () => {
+    if (typeof window !== "undefined") {
+      import("html2pdf.js").then((html2pdf) => {
+        const element = document.getElementById("brand-kit");
+        const opt = {
+          margin: 10,
+          filename: `${kit.brandName}-brand-kit.pdf`,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        };
+        html2pdf.default().set(opt).from(element).save();
+      });
+    }
   };
-  html2pdf().set(opt).from(element).save();
-};
 
   if (!kit) return (
     <div style={{ minHeight: "100vh", background: "#f0f6ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -29,13 +32,25 @@ const downloadPDF = () => {
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #e8f4ff 0%, #f0f8ff 50%, #e0f0ff 100%)", color: "#1a1a2e", fontFamily: "sans-serif", padding: "40px 20px" }}>
-      <div style={{ maxWidth: 700, margin: "0 auto" }}>
+      <div id="brand-kit" style={{ maxWidth: 700, margin: "0 auto" }}>
 
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
           <p style={{ color: "#00b4d8", letterSpacing: 4, fontSize: 12, marginBottom: 8, fontWeight: 600 }}>NABADAI — AI BRAND IDENTITY</p>
           <h1 style={{ fontSize: 42, fontWeight: 800, marginBottom: 8, color: "#2255cc" }}>{kit.brandName}</h1>
           <p style={{ color: "#5577aa" }}>Your custom brand kit is ready</p>
+        </div>
+
+        {/* Download Button */}
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <button onClick={downloadPDF} style={{
+            padding: "14px 40px", borderRadius: 8, border: "none",
+            background: "linear-gradient(135deg, #2255cc, #00b4d8)",
+            color: "#fff", fontSize: 16, fontWeight: "bold",
+            cursor: "pointer", boxShadow: "0 4px 20px rgba(34,85,204,0.3)",
+          }}>
+            ⬇️ Download Brand Kit PDF
+          </button>
         </div>
 
         {/* Logo Concepts */}
