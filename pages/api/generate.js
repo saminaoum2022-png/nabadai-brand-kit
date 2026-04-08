@@ -1,66 +1,55 @@
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { brandName, industry, audience, personality, colors, competitors, mission, style } = req.body;
+  const { brandName, industry, audience, personality, colorPrefs, competitors, brandStory, style } = req.body;
 
-  const prompt = `You are a professional brand strategist. Create a complete brand identity kit for:
+  const prompt = `You are a world-class brand strategist. Create a complete brand identity kit for the following brand:
 
 Brand Name: ${brandName}
 Industry: ${industry}
 Target Audience: ${audience}
 Brand Personality: ${personality}
-Color Preferences: ${colors}
-Competitors/Admired Brands: ${competitors}
-Brand Mission: ${mission}
-Preferred Style: ${style}
+Color Preferences: ${colorPrefs}
+Brands They Admire: ${competitors}
+Brand Story: ${brandStory}
+Style Preference: ${style}
 
-Return ONLY a valid JSON object with exactly this structure:
+Return ONLY a valid JSON object with this exact structure:
 {
-  "slogan1": "first slogan option",
-  "slogan2": "second slogan option",
-  "slogan3": "third slogan option",
+  "slogans": ["slogan1", "slogan2", "slogan3"],
   "colors": ["#hex1", "#hex2", "#hex3", "#hex4", "#hex5"],
   "colorNames": ["name1", "name2", "name3", "name4", "name5"],
-  "fonts": ["Font Pairing 1", "Font Pairing 2"],
-  "brandPersonality": "description",
-  "targetAudience": "detailed profile",
-  "brandArchetype": "archetype name",
-  "toneOfVoice": "tone description"
+  "colorUsage": ["usage1", "usage2", "usage3", "usage4", "usage5"],
+  "fonts": ["Font Name 1", "Font Name 2"],
+  "fontRoles": ["Primary heading font", "Body & supporting text"],
+  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6", "keyword7", "keyword8", "keyword9", "keyword10"],
+  "emailTemplate": "Full email text here with line breaks using \\n",
+  "brandArchetype": "The archetype name",
+  "targetAudienceProfile": "Detailed profile description"
 }`;
 
   try {
-    // Generate brand kit text
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [{ role: "user", content: prompt }],
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4",
+        messages: [{ role: "user", content: prompt }],
+        temperature:0.8,
+      }),
     });
 
-    const brandData = JSON.parse(completion.choices[0].message.content);
+    const openaiData = await openaiRes.json();
+    const content = openaiData.choices[0].message.content;
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch[0]);
 
-    // Generate 3 logo concepts using DALL-E
-    const logoPrompt = `Professional logo design for "${brandName}", a ${industry} brand. Style: ${style}. Colors: ${colors}. Personality: ${personality}. Clean, modern, vector-style logo on white background. No text.`;
-
-    const [logo1, logo2, logo3] = await Promise.all([
-      openai.images.generate({ model: "dall-e-3", prompt: logoPrompt + " Concept 1: icon-based mark", size: "1024x1024", quality: "standard", n: 1 }),
-      openai.images.generate({ model: "dall-e-3", prompt: logoPrompt + " Concept 2: abstract geometric mark", size: "1024x1024", quality: "standard", n: 1 }),
-      openai.images.generate({ model: "dall-e-3", prompt: logoPrompt + " Concept 3: minimal lettermark", size: "1024x1024", quality: "standard", n: 1 }),
-    ]);
-
-    res.status(200).json({
-      ...brandData,
-      logos: [
-        logo1.data[0].url,
-        logo2.data[0].url,
-        logo3.data[0].url,
-      ],
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(200).json(parsed);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Generation failed" });
   }
 }
