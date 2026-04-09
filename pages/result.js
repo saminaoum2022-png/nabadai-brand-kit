@@ -4,8 +4,7 @@ import Head from 'next/head';
 export default function Result() {
   const [kit, setKit] = useState(null);
 
-  useEffect(() => {
-    const data = sessionStorage.getItem('brandKit');
+  useEffect(() => {const data = sessionStorage.getItem('brandKit');
     if (data) setKit(JSON.parse(data));
     else window.location.href = '/';
   }, []);
