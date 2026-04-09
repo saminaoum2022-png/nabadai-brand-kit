@@ -84,7 +84,8 @@ Return ONLY valid JSON in this exact format:
       `Professional minimal vector logo for "${businessName}" in ${industry}. Clean icon mark + wordmark. Flat design, white background, no gradients, bold shapes, modern tech aesthetic. High contrast, print-ready.`,
 `Luxury modern logo for "${businessName}" — ${industry} brand. Geometric symbol combined with elegant sans-serif wordmark. Monochrome, scalable, white background. No decorative elements, no shadows.`,
 `Creative brand identity logo for "${businessName}". Industry: ${industry}. Abstract icon that represents innovation and trust. Flat vector style, white background, strong visual identity, suitable for app icon and business card.`,
-
+];
+    
     const logoImages = await Promise.all(
       logoPrompts.map(prompt =>
         openai.images.generate({
