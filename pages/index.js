@@ -1,11 +1,162 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+
+const LOADING_MESSAGES = [
+  "Scanning brand DNA...",
+  "Analyzing your industry...",
+  "Generating color palette...",
+  "Crafting your slogans...",
+  "Building typography system...",
+  "Mining SEO keywords...",
+  "Writing your brand story...",
+  "Assembling your identity...",
+  "Almost ready...",
+];
+
+function LogoLoader() {
+  const [msgIndex, setMsgIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMsgIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#0a0a0f" }}>
+      <style>{`
+        @keyframes ring1 {
+          0% { transform: rotate(0deg) scale(1); opacity: 1; }
+          40% { transform: rotate(180deg) scale(1.3); opacity: 0.4; }
+          70% { transform: rotate(300deg) scale(0.85); opacity: 0.7; }
+          100% { transform: rotate(360deg) scale(1); opacity: 1; }
+        }
+        @keyframes ring2 {
+          0% { transform: rotate(0deg) scale(1); opacity: 1; }
+          35% { transform: rotate(-150deg) scale(1.25); opacity: 0.3; }
+          65% { transform: rotate(-280deg) scale(0.9); opacity: 0.6; }
+          100% { transform: rotate(-360deg) scale(1); opacity: 1; }
+        }
+        @keyframes ring3 {
+          0% { transform: rotate(0deg) scale(1); opacity: 1; }
+          45% { transform: rotate(200deg) scale(1.2); opacity: 0.5; }
+          75% { transform: rotate(320deg) scale(0.88); opacity: 0.8; }
+          100% { transform: rotate(360deg) scale(1); opacity: 1; }
+        }
+        @keyframes corePulse {
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 12px #00c8d4); }
+          50% { transform: scale(1.08); filter: drop-shadow(0 0 28px #00c8d4) drop-shadow(0 0 48px #0066ff); }
+        }
+        @keyframes fadeMsg {
+          0% { opacity: 0; transform: translateY(8px); }
+          15% { opacity: 1; transform: translateY(0); }
+          85% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-8px); }
+        }
+        @keyframes scanLine {
+          0% { transform: translateY(-120px); opacity: 0; }
+          20% { opacity: 0.6; }
+          80% { opacity: 0.6; }
+          100% { transform: translateY(120px); opacity: 0; }
+        }
+        @keyframes orbit {
+          0% { transform: rotate(0deg) translateX(110px); }
+          100% { transform: rotate(360deg) translateX(110px); }
+        }
+        .ring1-wrap { animation: ring1 3.2s ease-in-out infinite; transform-origin: center; }
+        .ring2-wrap { animation: ring2 3.8s ease-in-out infinite; transform-origin: center; }
+        .ring3-wrap { animation: ring3 2.9s ease-in-out infinite; transform-origin: center; }
+        .core-wrap { animation: corePulse 2.4s ease-in-out infinite; transform-origin: center; }
+      `}</style>
+
+      <div style={{ position: "relative", width: 240, height: 240, marginBottom: 40 }}>
+
+        {/* Outer glow */}
+        <div style={{
+          position: "absolute", inset: -20, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,200,212,0.12) 0%, transparent 70%)",
+          animation: "corePulse 2.4s ease-in-out infinite"
+        }} />
+
+        {/* Scan line */}
+        <div style={{
+          position: "absolute", top: "50%", left: "10%", width: "80%", height: 2,
+          background: "linear-gradient(90deg, transparent, #00c8d4, transparent)",
+          borderRadius: 2, animation: "scanLine 2.4s ease-in-out infinite",
+          zIndex: 10,
+        }} />
+
+        {/* Ring 1 - outer */}
+        <div className="ring1-wrap" style={{ position: "absolute", inset: 0 }}>
+          <img
+            src="https://cdn.shopify.com/s/files/1/0822/6953/6481/files/download_1775583690592_faf21f31-373e-4e61-bb01-04c13f1bce34.jpg?v=1775654198"
+            style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.5, filter: "hue-rotate(10deg) brightness(1.2)" }}
+            alt=""
+          />
+        </div>
+
+        {/* Ring 2 - mid */}
+        <div className="ring2-wrap" style={{ position: "absolute", inset: 20 }}>
+          <img
+            src="https://cdn.shopify.com/s/files/1/0822/6953/6481/files/download_1775583690592_faf21f31-373e-4e61-bb01-04c13f1bce34.jpg?v=1775654198"
+            style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.6, filter: "hue-rotate(-20deg) brightness(1.3) saturate(1.4)" }}
+            alt=""
+          />
+        </div>
+
+        {/* Ring 3 - inner */}
+        <div className="ring3-wrap" style={{ position: "absolute", inset: 40 }}>
+          <img
+            src="https://cdn.shopify.com/s/files/1/0822/6953/6481/files/download_1775583690592_faf21f31-373e-4e61-bb01-04c13f1bce34.jpg?v=1775654198"
+            style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.8, filter: "hue-rotate(30deg) brightness(1.5) saturate(1.6)" }}
+            alt=""
+          />
+        </div>
+
+        {/* Core pulse */}
+        <div className="core-wrap" style={{
+          position: "absolute", inset: 70, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,200,212,0.3) 0%, transparent 70%)",
+        }} />
+
+        {/* Orbiting particles */}
+        {[0, 60, 120, 180, 240, 300].map((deg, i) => (
+          <div key={i} style={{
+            position: "absolute",
+            top: "50%", left: "50%",
+            width: 6, height: 6,
+            borderRadius: "50%",
+            background: i % 2 === 0 ? "#00c8d4" : "#0066ff",
+            boxShadow: `0 0 8px ${i % 2 === 0 ? "#00c8d4" : "#0066ff"}`,
+            transform: `rotate(${deg}deg) translateX(110px)`,
+            animation: `ring${(i % 3) + 1} ${2.5 + i * 0.3}s ease-in-out infinite`,
+            transformOrigin: "-110px 0",
+          }} />
+        ))}
+      </div>
+
+      {/* Cycling message */}
+      <div style={{ height: 32, overflow: "hidden", textAlign: "center" }}>
+        <p key={msgIndex} style={{
+          color: "#00c8d4", fontSize: 15, fontFamily: "'Inter', sans-serif", fontWeight: 600,
+          letterSpacing: 2, margin: 0, animation: "fadeMsg 1.8s ease-in-out forwards"
+        }}>
+          {LOADING_MESSAGES[msgIndex]}
+        </p>
+      </div>
+
+      <p style={{ color: "#333", fontSize: 12, fontFamily: "'Inter', sans-serif", marginTop: 12, letterSpacing: 1 }}>
+        NABADAI AI ENGINE RUNNING
+      </p>
+    </div>
+  );
+}
 
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState('');
   const [form, setForm] = useState({
     businessName: '',
     industry: '',
@@ -23,20 +174,21 @@ export default function Home() {
     setLoading(true);
 
     try {
-      setStep('🧠 Generating your brand strategy...');
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      const data = await res.json();
+      const [res] = await Promise.all([
+        fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form)
+        }),
+        new Promise((resolve) => setTimeout(resolve, 5000)),
+      ]);
 
+      const data = await res.json();
       if (!data.success) throw new Error(data.error);
 
       let kitData = data.data;
 
       if (form.businessType === 'product') {
-        setStep('📦 Generating product mockups...');
         const mockupRes = await fetch('/api/mockup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -60,6 +212,8 @@ export default function Home() {
     }
   };
 
+  if (loading) return <LogoLoader />;
+
   return (
     <>
       <Head>
@@ -69,32 +223,23 @@ export default function Home() {
 
       <div style={styles.page}>
         <div style={styles.container}>
-          {/* Header */}
           <div style={styles.header}>
             <div style={styles.badge}>✦ AI-Powered</div>
             <h1 style={styles.title}>Brand Kit Generator</h1>
             <p style={styles.subtitle}>Get a complete brand identity, legal foundation & marketing strategy in seconds</p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} style={styles.form}>
 
-            {/* Business Type Toggle */}
             <div style={styles.toggleGroup}>
               <p style={styles.label}>What are you building?</p>
               <div style={styles.toggle}>
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, businessType: 'product' })}
-                  style={form.businessType === 'product' ? styles.toggleActive : styles.toggleInactive}
-                >
+                <button type="button" onClick={() => setForm({ ...form, businessType: 'product' })}
+                  style={form.businessType === 'product' ? styles.toggleActive : styles.toggleInactive}>
                   📦 Product Business
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, businessType: 'service' })}
-                  style={form.businessType === 'service' ? styles.toggleActive : styles.toggleInactive}
-                >
+                <button type="button" onClick={() => setForm({ ...form, businessType: 'service' })}
+                  style={form.businessType === 'service' ? styles.toggleActive : styles.toggleInactive}>
                   🏢 Service Business
                 </button>
               </div>
@@ -140,7 +285,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* What you'll get */}
             <div style={styles.deliverables}>
               <p style={styles.deliverablesTitle}>✦ What you'll receive</p>
               <div style={styles.delGrid}>
@@ -156,8 +300,8 @@ export default function Home() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading} style={loading ? styles.btnDisabled : styles.btn}>
-              {loading ? step || '⏳ Generating...' : '✦ Generate My Brand Kit'}
+            <button type="submit" style={styles.btn}>
+              ✦ Generate My Brand Kit
             </button>
 
           </form>
@@ -189,5 +333,4 @@ const styles = {
   delGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' },
   delItem: { color: '#ccc', fontSize: '13px' },
   btn: { width: '100%', padding: '16px', background: 'linear-gradient(135deg, #00c8d4, #0066ff)', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '16px', fontWeight: '700', cursor: 'pointer', letterSpacing: '0.5px' },
-  btnDisabled: { width: '100%', padding: '16px', background: '#1e1e2e', border: 'none', borderRadius: '10px', color: '#666', fontSize: '16px', fontWeight: '700', cursor: 'not-allowed', letterSpacing: '0.5px' }
 };
