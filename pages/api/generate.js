@@ -92,7 +92,7 @@ Return ONLY valid JSON in this exact format:
           prompt,
           n: 1,
           size: '1024x1024',
-          quality: 'standard',
+          quality: 'hd',
           style: 'natural'
         }).then(r => r.data[0].url)
       )
