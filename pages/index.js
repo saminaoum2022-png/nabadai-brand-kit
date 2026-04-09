@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 
+const LOGO_URL = 'https://cdn.shopify.com/s/files/1/0822/6953/6481/files/IMG-6520.png?v=1775730509';
+
 const LOADING_MESSAGES = [
   "Scanning brand DNA...",
   "Analyzing your industry...",
@@ -71,16 +73,13 @@ function LogoLoader() {
         <div style={{ position: "absolute", top: "50%", left: "10%", width: "80%", height: 2, background: "linear-gradient(90deg, transparent, #1a237e, transparent)", borderRadius: 2, animation: "scanLine 2.4s ease-in-out infinite", zIndex: 10 }} />
 
         <div className="ring1-wrap" style={{ position: "absolute", inset: 0 }}>
-          <img src="https://cdn.shopify.com/s/files/1/0822/6953/6481/files/download_1775583690592_faf21f31-373e-4e61-bb01-04c13f1bce34.jpg?v=1775654198"
-            style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.6, mixBlendMode: "multiply" }} alt="" />
+          <img src={LOGO_URL} style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.6, mixBlendMode: "multiply" }} alt="" />
         </div>
         <div className="ring2-wrap" style={{ position: "absolute", inset: 20 }}>
-          <img src="https://cdn.shopify.com/s/files/1/0822/6953/6481/files/download_1775583690592_faf21f31-373e-4e61-bb01-04c13f1bce34.jpg?v=1775654198"
-            style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.5, mixBlendMode: "multiply" }} alt="" />
+          <img src={LOGO_URL} style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.5, mixBlendMode: "multiply" }} alt="" />
         </div>
         <div className="ring3-wrap" style={{ position: "absolute", inset: 40 }}>
-          <img src="https://cdn.shopify.com/s/files/1/0822/6953/6481/files/download_1775583690592_faf21f31-373e-4e61-bb01-04c13f1bce34.jpg?v=1775654198"
-            style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.9, mixBlendMode: "multiply" }} alt="" />
+          <img src={LOGO_URL} style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.9, mixBlendMode: "multiply" }} alt="" />
         </div>
 
         <div className="core-wrap" style={{ position: "absolute", inset: 70, borderRadius: "50%", background: "radial-gradient(circle, rgba(26,35,126,0.15) 0%, transparent 70%)" }} />
@@ -169,8 +168,7 @@ export default function Home() {
         <div style={s.container}>
 
           <div style={s.header}>
-            <img src="https://cdn.shopify.com/s/files/1/0822/6953/6481/files/download_1775583690592_faf21f31-373e-4e61-bb01-04c13f1bce34.jpg?v=1775654198"
-              style={{ width: 52, height: 52, objectFit: "contain", marginBottom: 20 }} alt="NabadAi" />
+            <img src={LOGO_URL} style={{ width: 52, height: 52, objectFit: "contain", marginBottom: 20, mixBlendMode: "multiply" }} alt="NabadAi" />
             <p style={s.eyebrow}>AI-Powered Brand Identity</p>
             <h1 style={s.title}>Build Your Brand Kit</h1>
             <p style={s.subtitle}>Answer a few questions. Get a complete brand identity in seconds.</p>
