@@ -81,10 +81,9 @@ Return ONLY valid JSON in this exact format:
 
     // 2. Generate 3 logo concepts via DALL-E 3
     const logoPrompts = [
-      `Minimalist vector icon logo for "${businessName}", ${industry} brand, NO text, transparent background, geometric abstract symbol, colors: ${kitData.colors[0].hex} and ${kitData.colors[2].hex}, clean professional design, white background`,
-      `Modern abstract logo mark for "${businessName}", ${industry} industry, NO text, transparent background, bold geometric shapes, premium luxury feel, colors: ${kitData.colors[1].hex} and ${kitData.colors[0].hex}`,
-      `Creative symbolic logo for "${businessName}", ${industry} sector, NO text, transparent background, unique icon representing the brand essence, minimalist style, colors: ${kitData.colors[2].hex} and ${kitData.colors[3].hex}`
-    ];
+      `Professional minimal vector logo for "${businessName}" in ${industry}. Clean icon mark + wordmark. Flat design, white background, no gradients, bold shapes, modern tech aesthetic. High contrast, print-ready.`,
+`Luxury modern logo for "${businessName}" — ${industry} brand. Geometric symbol combined with elegant sans-serif wordmark. Monochrome, scalable, white background. No decorative elements, no shadows.`,
+`Creative brand identity logo for "${businessName}". Industry: ${industry}. Abstract icon that represents innovation and trust. Flat vector style, white background, strong visual identity, suitable for app icon and business card.`,
 
     const logoImages = await Promise.all(
       logoPrompts.map(prompt =>
