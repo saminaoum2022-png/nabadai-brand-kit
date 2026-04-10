@@ -22,9 +22,7 @@ async function generateWithReplicate(prompt, negativePrompt) {
     });
 
     console.log('Replicate status:', startRes.status);
-const prediction = await startRes.json();
-console.log('Replicate response:', JSON.stringify(prediction));
-
+    const prediction = await startRes.json();
     console.log('Replicate response:', JSON.stringify(prediction));
 
     if (!prediction.id) throw new Error('No prediction ID from Replicate');
@@ -70,69 +68,70 @@ async function generateImage(replicatePrompt, dallePrompt, negativePrompt) {
   return await generateWithDalle(dallePrompt);
 }
 
-function buildProductConfigs(businessName, industry, description, productType, primaryColor, accentColor) {
+function buildMockupConfig(mockupType, { businessName, industry, description, audience, productType, businessType, primaryColor, accentColor }) {
+  const negativePrompt = "cartoon, illustration, blurry, low quality, watermark, cluttered, unprofessional, pixelated, 3d render";
   const product = productType || industry;
-  const negativePrompt = "illustration, cartoon, 3d render, blurry, low quality, watermark, text overlay, busy background, unrealistic lighting";
 
-  return [
-    {
-      replicate: `Professional product mockup of ${product} for brand "${businessName}", ${industry} industry. Product description: ${description}. Primary brand color: ${primaryColor}, accent: ${accentColor}. Clean studio shot, white or neutral background, photorealistic, commercial photography, 4k, premium packaging`,
-      dalle: `Professional product mockup for "${businessName}" — a ${industry} brand selling ${product}. ${description}. Brand colors: ${primaryColor} and ${accentColor}. Clean studio photography, white background, premium feel, commercial quality.`,
-      negative: negativePrompt
+  const configs = {
+    website_hero: {
+      replicate: `Modern website hero section mockup for "${businessName}", ${industry} brand. ${description}. Target audience: ${audience}. Brand colors: ${primaryColor} and ${accentColor}. Clean UI design, professional layout, desktop screen mockup, premium digital brand identity, high-end web design`,
+      dalle: `Website hero section mockup for "${businessName}" — ${industry} brand. ${description}. Colors: ${primaryColor} and ${accentColor}. Modern UI, clean layout, professional digital brand presentation.`,
     },
-    {
-      replicate: `Elegant close-up packaging mockup for "${businessName}" ${product}, ${industry} brand. Description: ${description}. Color palette: ${primaryColor} and ${accentColor}. Luxury feel, soft lighting, shallow depth of field, premium product photography, 4k`,
-      dalle: `Elegant packaging close-up for "${businessName}" ${product} brand. ${description}. Colors: ${primaryColor} and ${accentColor}. Luxury product photography, soft lighting, premium aesthetic.`,
-      negative: negativePrompt
+    instagram_post: {
+      replicate: `Professional Instagram square post mockup for "${businessName}", ${industry} brand. ${description}. Audience: ${audience}. Brand colors: ${primaryColor} and ${accentColor}. Modern graphic design, premium brand aesthetic, clean layout, bold typography, social media ready, 4k`,
+      dalle: `Instagram post design for "${businessName}" — ${industry} brand. ${description}. Colors: ${primaryColor} and ${accentColor}. Square format, modern, clean, premium brand aesthetic, bold typography.`,
     },
-    {
-      replicate: `Lifestyle mockup showing ${product} from "${businessName}" in real-world context. Industry: ${industry}. ${description}. Brand colors: ${primaryColor} and ${accentColor}. Aspirational lifestyle photography, natural lighting, modern aesthetic, 4k, commercial quality`,
-      dalle: `Lifestyle product photo for "${businessName}" ${product}. ${description}. Brand colors: ${primaryColor} and ${accentColor}. Real-world context, natural lighting, aspirational and modern feel.`,
-      negative: negativePrompt
-    }
-  ];
-}
+    business_card: {
+      replicate: `Premium business card mockup for "${businessName}", ${industry} brand. ${description}. Primary color: ${primaryColor}, accent: ${accentColor}. Minimal elegant design, clean typography, premium paper texture, studio lighting, photorealistic, 4k`,
+      dalle: `Professional business card mockup for "${businessName}" — ${industry} brand. ${description}. Colors: ${primaryColor} and ${accentColor}. Minimal, elegant, premium feel, clean typography.`,
+    },
+    packaging: {
+      replicate: `Elegant product packaging mockup for "${businessName}" ${product}, ${industry} brand. ${description}. Brand colors: ${primaryColor} and ${accentColor}. Luxury feel, soft lighting, premium packaging design, clean studio shot, photorealistic, 4k`,
+      dalle: `Premium packaging mockup for "${businessName}" ${product}. ${description}. Colors: ${primaryColor} and ${accentColor}. Luxury product packaging, soft lighting, premium aesthetic.`,
+    },
+    product_shot: {
+      replicate: `Professional product studio shot for "${businessName}" ${product}, ${industry} brand. ${description}. Brand colors: ${primaryColor} and ${accentColor}. White background, commercial photography, clean studio lighting, photorealistic, 4k, premium product photography`,
+      dalle: `Professional product photo for "${businessName}" ${product}. ${description}. Colors: ${primaryColor} and ${accentColor}. White background, studio lighting, commercial quality photography.`,
+    },
+    ecommerce_listing: {
+      replicate: `E-commerce product listing image for "${businessName}" ${product}, ${industry} brand. ${description}. Brand colors: ${primaryColor} and ${accentColor}. Pure white background, multiple angles suggestion, clean product presentation, Amazon/Shopify style, photorealistic, 4k`,
+      dalle: `E-commerce listing image for "${businessName}" ${product}. ${description}. Colors: ${primaryColor} and ${accentColor}. White background, clean product presentation, professional e-commerce style.`,
+    },
+    proposal_cover: {
+      replicate: `Professional business proposal cover page mockup for "${businessName}", ${industry} service company. ${description}. Brand colors: ${primaryColor} and ${accentColor}. Clean corporate design, premium typography, elegant layout, A4 document mockup, photorealistic`,
+      dalle: `Business proposal cover design for "${businessName}" — ${industry} service. ${description}. Colors: ${primaryColor} and ${accentColor}. Professional, clean corporate layout, premium typography, A4 format.`,
+    },
+    email_header: {
+      replicate: `Professional email newsletter header banner for "${businessName}", ${industry} brand. ${description}. Target audience: ${audience}. Brand colors: ${primaryColor} and ${accentColor}. Clean modern email design, wide banner format, premium brand aesthetic, crisp typography`,
+      dalle: `Email newsletter header banner for "${businessName}" — ${industry} brand. ${description}. Colors: ${primaryColor} and ${accentColor}. Wide format, modern, clean, professional email design.`,
+    },
+    ad_banner: {
+      replicate: `Professional digital ad banner for "${businessName}", ${industry} brand. ${description}. Target audience: ${audience}. Brand colors: ${primaryColor} and ${accentColor}. Bold design, clear call to action area, Facebook/Google ad style, premium brand aesthetic, high impact visual`,
+      dalle: `Digital advertising banner for "${businessName}" — ${industry} brand. ${description}. Colors: ${primaryColor} and ${accentColor}. Bold, high-impact design, clear CTA area, professional ad creative.`,
+    },
+  };
 
-function buildServiceConfigs(businessName, industry, description, audience, primaryColor, accentColor) {
-  const negativePrompt = "cartoon, illustration, blurry, low quality, watermark, cluttered, unprofessional, pixelated";
-
-  return [
-    {
-      replicate: `Professional business card mockup for "${businessName}", ${industry} service brand. Description: ${description}. Primary color: ${primaryColor}, accent: ${accentColor}. Minimal elegant design, clean typography, premium paper texture, studio lighting, photorealistic, 4k`,
-      dalle: `Professional business card design mockup for "${businessName}" — ${industry} brand. ${description}. Colors: ${primaryColor} and ${accentColor}. Minimal, elegant, premium feel, clean typography.`,
-      negative: negativePrompt
-    },
-    {
-      replicate: `Modern website hero section mockup for "${businessName}", ${industry} service company. ${description}. Target audience: ${audience}. Brand colors: ${primaryColor} and ${accentColor}. Clean UI design, professional layout, desktop screen mockup, premium digital brand identity`,
-      dalle: `Website hero section mockup for "${businessName}" — ${industry} service. ${description}. Colors: ${primaryColor} and ${accentColor}. Modern UI, clean layout, professional digital brand presentation.`,
-      negative: negativePrompt
-    },
-    {
-      replicate: `Professional social media post mockup for "${businessName}", ${industry} brand. Service: ${description}. Audience: ${audience}. Colors: ${primaryColor} and ${accentColor}. Instagram square format, modern graphic design, premium brand aesthetic, clean layout, 4k`,
-      dalle: `Social media post design mockup for "${businessName}" — ${industry} service brand. ${description}. Colors: ${primaryColor} and ${accentColor}. Instagram format, modern, clean, premium brand aesthetic.`,
-      negative: negativePrompt
-    }
-  ];
+  const config = configs[mockupType] || configs['instagram_post'];
+  return { ...config, negative: negativePrompt };
 }
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { businessName, industry, description, audience, productType, businessType, colors } = req.body;
+  const { businessName, industry, description, audience, productType, businessType, mockupType, colors } = req.body;
 
   try {
     const primaryColor = colors?.[0]?.hex || '#000000';
     const accentColor = colors?.[2]?.hex || '#ffffff';
 
-    const configs = businessType === 'service'
-      ? buildServiceConfigs(businessName, industry, description, audience, primaryColor, accentColor)
-      : buildProductConfigs(businessName, industry, description, productType, primaryColor, accentColor);
+    const config = buildMockupConfig(mockupType, {
+      businessName, industry, description, audience,
+      productType, businessType, primaryColor, accentColor
+    });
 
-    const mockupImages = await Promise.all(
-      configs.map(config => generateImage(config.replicate, config.dalle, config.negative))
-    );
+    const mockupUrl = await generateImage(config.replicate, config.dalle, config.negative);
 
-    res.status(200).json({ success: true, mockups: mockupImages });
+    res.status(200).json({ success: true, mockups: [mockupUrl] });
 
   } catch (error) {
     console.error(error);
