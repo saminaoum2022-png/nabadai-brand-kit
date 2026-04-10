@@ -21,7 +21,10 @@ async function generateWithReplicate(prompt, negativePrompt) {
       })
     });
 
-    const prediction = await startRes.json();
+    console.log('Replicate status:', startRes.status);
+const prediction = await startRes.json();
+console.log('Replicate response:', JSON.stringify(prediction));
+
     console.log('Replicate response:', JSON.stringify(prediction));
 
     if (!prediction.id) throw new Error('No prediction ID from Replicate');
