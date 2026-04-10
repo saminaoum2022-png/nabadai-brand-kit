@@ -7,7 +7,7 @@ async function generateWithReplicate(prompt, negativePrompt) {
     const startRes = await fetch("https://api.replicate.com/v1/models/black-forest-labs/flux-pro/predictions", {
       method: "POST",
       headers: {
-        "Authorization": `Token ${process.env.REPLICATE_API_KEY}`,
+        "Authorization": `Bearer ${process.env.REPLICATE_API_TOKEN}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
@@ -28,7 +28,7 @@ async function generateWithReplicate(prompt, negativePrompt) {
     for (let i = 0; i < 30; i++) {
       await new Promise(r => setTimeout(r, 3000));
       const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-        headers: { "Authorization": `Token ${process.env.REPLICATE_API_KEY}` }
+        headers: { "Authorization": `Bearer ${process.env.REPLICATE_API_TOKEN}` }
       });
       result = await pollRes.json();
       if (result.status === 'succeeded') break;
