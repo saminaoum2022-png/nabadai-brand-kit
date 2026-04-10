@@ -5,15 +5,31 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { businessName, industry, description, audience, budget, businessType } = req.body;
+  const { businessName, industry, description, audience, budget, businessType, productType } = req.body;
 
   try {
-    // 1. Generate full brand kit via GPT-4
+    // 1. Generate full brand kit via GPT-4o
     const brandKit = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{
+        role: 'system',
+        content: `You are an elite brand strategist with 20 years of experience building premium brands. 
+        
+CRITICAL RULES — NEVER BREAK THESE:
+- Every section must be 100% specific to THIS business only
+- Never use generic advice that could apply to any business
+- Legal advice must reference THIS industry's specific regulations and risks
+- Brand voice must reflect THIS specific audience's language, values and lifestyle
+- Slogans must feel like they were written ONLY for this brand — never reusable
+- Hashtags must be niche-specific — never generic like #business #success #entrepreneur
+- Competitor gaps must reflect REAL gaps in THIS specific industry
+- Color choices must reflect the psychology of THIS industry and audience
+- Typography must match the brand personality — not just "clean and modern"
+- If any section feels generic, you have failed the task
+- Think deeply about what makes THIS business unique before writing anything`
+      }, {
         role: 'user',
-        content: `You are a premium brand strategist. Generate a complete brand kit for this business:
+        content: `Generate a complete brand kit for this business:
 
 Business Name: ${businessName}
 Industry: ${industry}
@@ -21,56 +37,57 @@ Description: ${description}
 Target Audience: ${audience}
 Budget Range: ${budget}
 Type: ${businessType} (product or service)
+${productType ? `Product Type: ${productType}` : ''}
 
 Return ONLY valid JSON in this exact format:
 {
   "colors": [
-    {"name": "Primary", "hex": "#XXXXXX", "usage": "Main brand color for logos and CTAs"},
-    {"name": "Secondary", "hex": "#XXXXXX", "usage": "Supporting color for backgrounds"},
-    {"name": "Accent", "hex": "#XXXXXX", "usage": "Highlights and interactive elements"},
-    {"name": "Neutral", "hex": "#XXXXXX", "usage": "Text and subtle backgrounds"},
-    {"name": "Dark", "hex": "#XXXXXX", "usage": "Headers and dark mode backgrounds"}
+    {"name": "Primary", "hex": "#XXXXXX", "usage": "Specific usage for THIS brand"},
+    {"name": "Secondary", "hex": "#XXXXXX", "usage": "Specific usage for THIS brand"},
+    {"name": "Accent", "hex": "#XXXXXX", "usage": "Specific usage for THIS brand"},
+    {"name": "Neutral", "hex": "#XXXXXX", "usage": "Specific usage for THIS brand"},
+    {"name": "Dark", "hex": "#XXXXXX", "usage": "Specific usage for THIS brand"}
   ],
   "typography": [
-    {"role": "Heading Font", "name": "Font Name", "style": "Bold, modern", "pairedWith": "Body font name"},
-    {"role": "Body Font", "name": "Font Name", "style": "Clean, readable", "pairedWith": "Heading font name"}
+    {"role": "Heading Font", "name": "Font Name", "style": "Why this font fits THIS brand specifically", "pairedWith": "Body font name"},
+    {"role": "Body Font", "name": "Font Name", "style": "Why this font fits THIS brand specifically", "pairedWith": "Heading font name"}
   ],
-  "slogans": ["Slogan 1", "Slogan 2", "Slogan 3"],
+  "slogans": ["Slogan unique to ${businessName}", "Slogan unique to ${businessName}", "Slogan unique to ${businessName}"],
   "brandVoice": {
-    "tone": "Friendly and professional",
-    "doList": ["Do this", "Do that", "Do this too"],
-    "dontList": ["Avoid this", "Never say that"],
-    "captions": ["Caption 1", "Caption 2", "Caption 3", "Caption 4", "Caption 5"]
+    "tone": "Specific tone for THIS audience: ${audience}",
+    "doList": ["Specific do for THIS brand", "Specific do for THIS brand", "Specific do for THIS brand"],
+    "dontList": ["Specific dont for THIS brand", "Specific dont for THIS brand"],
+    "captions": ["Caption specific to ${businessName}", "Caption specific to ${businessName}", "Caption specific to ${businessName}", "Caption specific to ${businessName}", "Caption specific to ${businessName}"]
   },
   "legal": {
-    "trademarkAdvice": "Specific trademark advice for this business",
-    "businessStructure": "Recommended structure and why",
-    "ipProtection": ["Tip 1", "Tip 2", "Tip 3"],
-    "termsHighlights": ["Key term 1", "Key term 2", "Key term 3"],
-    "privacyHighlights": ["Privacy point 1", "Privacy point 2"]
+    "trademarkAdvice": "Specific trademark advice for ${industry} industry",
+    "businessStructure": "Recommended structure for THIS type of business in THIS industry",
+    "ipProtection": ["Specific IP tip for ${industry}", "Specific IP tip for ${industry}", "Specific IP tip for ${industry}"],
+    "termsHighlights": ["Specific term for ${businessType} business", "Specific term for ${businessType} business", "Specific term for ${businessType} business"],
+    "privacyHighlights": ["Privacy point specific to ${industry}", "Privacy point specific to ${industry}"]
   },
   "marketing": {
-    "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"],
-    "competitorGaps": ["Gap opportunity 1", "Gap opportunity 2", "Gap opportunity 3"],
-    "audienceProfile": "Detailed target audience description",
-    "contentCalendar": ["Week 1 theme", "Week 2 theme", "Week 3 theme", "Week 4 theme"]
+    "hashtags": ["#NicheTag1", "#NicheTag2", "#NicheTag3", "#NicheTag4", "#NicheTag5"],
+    "competitorGaps": ["Real gap in ${industry} market", "Real gap in ${industry} market", "Real gap in ${industry} market"],
+    "audienceProfile": "Deep profile of ${audience} — their lifestyle, values, pain points, buying triggers",
+    "contentCalendar": ["Week 1 theme specific to ${businessName}", "Week 2 theme specific to ${businessName}", "Week 3 theme specific to ${businessName}", "Week 4 theme specific to ${businessName}"]
   },
   "productDeliverables": {
-    "packagingConcepts": ["Concept 1", "Concept 2", "Concept 3"],
-    "photographyStyle": "Photography style description",
-    "unboxingExperience": "Unboxing experience recommendations",
-    "listingCopy": "E-commerce product listing copy"
+    "packagingConcepts": ["Concept specific to ${productType || industry}", "Concept specific to ${productType || industry}", "Concept specific to ${productType || industry}"],
+    "photographyStyle": "Photography style specific to ${productType || industry} products",
+    "unboxingExperience": "Unboxing experience tailored to ${audience}",
+    "listingCopy": "E-commerce listing copy written specifically for ${businessName}"
   },
   "serviceDeliverables": {
-    "proposalTemplate": "Proposal structure and key points",
-    "pricingGuide": "Pricing strategy and tiers",
-    "onboardingChecklist": ["Step 1", "Step 2", "Step 3", "Step 4"],
-    "socialBio": "Professional social media bio copy"
+    "proposalTemplate": "Proposal structure specific to ${industry} services",
+    "pricingGuide": "Pricing strategy for ${industry} targeting ${audience}",
+    "onboardingChecklist": ["Step specific to ${industry}", "Step specific to ${industry}", "Step specific to ${industry}", "Step specific to ${industry}"],
+    "socialBio": "Bio written specifically for ${businessName} targeting ${audience}"
   },
   "midjourneyPrompts": [
-    "Detailed Midjourney prompt 1 for logo concept",
-    "Detailed Midjourney prompt 2 for logo concept",
-    "Detailed Midjourney prompt 3 for logo concept"
+    "Detailed Midjourney prompt for ${businessName} logo concept 1",
+    "Detailed Midjourney prompt for ${businessName} logo concept 2",
+    "Detailed Midjourney prompt for ${businessName} logo concept 3"
   ]
 }`
       }],
