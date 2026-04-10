@@ -3,41 +3,66 @@ import OpenAI from 'openai';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 async function generateWithReplicate(prompt, negativePrompt) {
-  const startRes = await fetch("https://api.replicate.com/v1/models/black-forest-labs/flux-pro/predictions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Token ${process.env.REPLICATE_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      input: {
-        prompt,
-        negative_prompt: negativePrompt,
-        width: 1024,
-        height: 1024,
-        steps: 30
-      }
-    })
-  });
-
-  const prediction = await startRes.json();
-  const predictionId = prediction.id;
-
-  let result;
-  for (let i = 0; i < 30; i++) {
-    await new Promise(r => setTimeout(r, 3000));
-    const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
-      headers: { "Authorization": `Token ${process.env.REPLICATE_API_KEY}` }
+  try {
+    const startRes = await fetch("https://api.replicate.com/v1/models/black-forest-labs/flux-pro/predictions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Token ${process.env.REPLICATE_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        input: {
+          prompt,
+          negative_prompt: negativePrompt,
+          width: 1024,
+          height: 1024,
+          steps: 30
+        }
+      })
     });
-    result = await pollRes.json();
-    if (result.status === 'succeeded') break;
-    if (result.status === 'failed') throw new Error('Logo generation failed');
-  }
 
-  const output = result.output;
-  if (typeof output === 'string') return output;
-  if (Array.isArray(output)) return output[0];
-  return null;
+    const prediction = await startRes.json();
+    if (!prediction.id) throw new Error('No prediction ID from Replicate');
+
+    let result;
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+        headers: { "Authorization": `Token ${process.env.REPLICATE_API_KEY}` }
+      });
+      result = await pollRes.json();
+      if (result.status === 'succeeded') break;
+      if (result.status === 'failed') throw new Error('Replicate generation failed');
+    }
+
+    const output = result.output;
+    const url = typeof output === 'string' ? output : Array.isArray(output) ? output[0] : null;
+    if (!url) throw new Error('No output URL from Replicate');
+    return url;
+
+  } catch (err) {
+    console.warn('Replicate failed, falling back to DALL-E:', err.message);
+    return null; // triggers fallback
+  }
+}
+
+async function generateWithDalle(prompt) {
+  const response = await openai.images.generate({
+    model: 'dall-e-3',
+    prompt,
+    n: 1,
+    size: '1024x1024',
+    quality: 'hd',
+    style: 'natural'
+  });
+  return response.data[0].url;
+}
+
+async function generateImage(replicatePrompt, dallePrompt, negativePrompt) {
+  const replicateUrl = await generateWithReplicate(replicatePrompt, negativePrompt);
+  if (replicateUrl) return replicateUrl;
+  console.log('Using DALL-E fallback...');
+  return await generateWithDalle(dallePrompt);
 }
 
 export default async function handler(req, res) {
@@ -133,16 +158,25 @@ Return ONLY valid JSON in this exact format:
 
     const kitData = JSON.parse(brandKit.choices[0].message.content);
 
-    const logoPrompts = [
-      `Minimal flat vector logo for "${businessName}", ${industry} brand, single icon mark above clean wordmark, white background, bold geometric shapes, no gradients, no shadows, no text other than brand name, print ready, professional brand identity`,
-      `Modern luxury logo for "${businessName}", ${industry} industry, abstract geometric symbol combined with elegant sans-serif wordmark, monochrome black on white, scalable vector style, no decorative elements, no shadows, no extra text`,
-      `Creative minimal logo mark for "${businessName}", ${industry} sector, flat icon representing innovation and trust, white background, strong visual identity, suitable for app icon and business card, clean vector design, no gradients`
-    ];
-
     const logoNegativePrompt = "photorealistic, 3d render, shadows, gradients, clipart, watermark, blurry, low quality, extra text, random letters, distorted shapes, cartoon, illustration style, busy background, multiple colors, neon, glow effects, badge, shield, ribbon";
 
+    const logoConfigs = [
+      {
+        replicate: `Minimal flat vector logo for "${businessName}", ${industry} brand, single icon mark above clean wordmark, white background, bold geometric shapes, no gradients, no shadows, no text other than brand name, print ready, professional brand identity`,
+        dalle: `Professional minimal vector logo for "${businessName}" in ${industry}. Clean icon mark + wordmark. Flat design, white background, no gradients, bold shapes, modern tech aesthetic. High contrast, print-ready.`
+      },
+      {
+        replicate: `Modern luxury logo for "${businessName}", ${industry} industry, abstract geometric symbol combined with elegant sans-serif wordmark, monochrome black on white, scalable vector style, no decorative elements, no shadows, no extra text`,
+        dalle: `Luxury modern logo for "${businessName}" — ${industry} brand. Geometric symbol combined with elegant sans-serif wordmark. Monochrome, scalable, white background. No decorative elements, no shadows.`
+      },
+      {
+        replicate: `Creative minimal logo mark for "${businessName}", ${industry} sector, flat icon representing innovation and trust, white background, strong visual identity, suitable for app icon and business card, clean vector design, no gradients`,
+        dalle: `Creative brand identity logo for "${businessName}". Industry: ${industry}. Abstract icon that represents innovation and trust. Flat vector style, white background, strong visual identity, suitable for app icon and business card.`
+      }
+    ];
+
     const logoImages = await Promise.all(
-      logoPrompts.map(prompt => generateWithReplicate(prompt, logoNegativePrompt))
+      logoConfigs.map(config => generateImage(config.replicate, config.dalle, logoNegativePrompt))
     );
 
     kitData.logos = logoImages;
