@@ -2,19 +2,56 @@ import OpenAI from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+async function generateWithReplicate(prompt, negativePrompt) {
+  const startRes = await fetch("https://api.replicate.com/v1/models/black-forest-labs/flux-pro/predictions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Token ${process.env.REPLICATE_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      input: {
+        prompt,
+        negative_prompt: negativePrompt,
+        width: 1024,
+        height: 1024,
+        steps: 30
+      }
+    })
+  });
+
+  const prediction = await startRes.json();
+  const predictionId = prediction.id;
+
+  let result;
+  for (let i = 0; i < 30; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
+      headers: { "Authorization": `Token ${process.env.REPLICATE_API_KEY}` }
+    });
+    result = await pollRes.json();
+    if (result.status === 'succeeded') break;
+    if (result.status === 'failed') throw new Error('Logo generation failed');
+  }
+
+  const output = result.output;
+  if (typeof output === 'string') return output;
+  if (Array.isArray(output)) return output[0];
+  return null;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { businessName, industry, description, audience, budget, businessType, productType } = req.body;
 
   try {
-    // 1. Generate full brand kit via GPT-4o
     const brandKit = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{
         role: 'system',
-        content: `You are an elite brand strategist with 20 years of experience building premium brands. 
-        
+        content: `You are an elite brand strategist with 20 years of experience building premium brands.
+
 CRITICAL RULES — NEVER BREAK THESE:
 - Every section must be 100% specific to THIS business only
 - Never use generic advice that could apply to any business
@@ -96,7 +133,6 @@ Return ONLY valid JSON in this exact format:
 
     const kitData = JSON.parse(brandKit.choices[0].message.content);
 
-    // 2. Generate 3 logo concepts via Replicate Flux Pro
     const logoPrompts = [
       `Minimal flat vector logo for "${businessName}", ${industry} brand, single icon mark above clean wordmark, white background, bold geometric shapes, no gradients, no shadows, no text other than brand name, print ready, professional brand identity`,
       `Modern luxury logo for "${businessName}", ${industry} industry, abstract geometric symbol combined with elegant sans-serif wordmark, monochrome black on white, scalable vector style, no decorative elements, no shadows, no extra text`,
@@ -106,28 +142,7 @@ Return ONLY valid JSON in this exact format:
     const logoNegativePrompt = "photorealistic, 3d render, shadows, gradients, clipart, watermark, blurry, low quality, extra text, random letters, distorted shapes, cartoon, illustration style, busy background, multiple colors, neon, glow effects, badge, shield, ribbon";
 
     const logoImages = await Promise.all(
-      logoPrompts.map(async (prompt) => {
-        const response = await fetch("https://api.replicate.com/v1/models/black-forest-labs/flux-pro/predictions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Token ${process.env.REPLICATE_API_KEY}`,
-            "Content-Type": "application/json",
-            "Prefer": "wait"
-          },
-          body: JSON.stringify({
-            input: {
-              prompt,
-              negative_prompt: logoNegativePrompt,
-              width: 1024,
-              height: 1024,
-              steps: 30
-            }
-          })
-        });
-
-        const prediction = await response.json();
-        return prediction.output?.[0] || prediction.output;
-      })
+      logoPrompts.map(prompt => generateWithReplicate(prompt, logoNegativePrompt))
     );
 
     kitData.logos = logoImages;
@@ -143,4 +158,4 @@ Return ONLY valid JSON in this exact format:
   }
 }
 
-export const config = { api: { bodyParser: true } };
+export const config = { api: { bodyParser: true, responseLimit: false } };
