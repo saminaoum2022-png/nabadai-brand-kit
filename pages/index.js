@@ -139,10 +139,10 @@ export default function Home() {
       let kitData = data.data;
       if (form.businessType === 'product') {
         const mockupRes = await fetch('/api/mockup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ businessName: form.businessName, industry: form.industry, productType: form.productType, colors: kitData.colors })
-        });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ businessName: form.businessName, industry: form.industry, productType: form.productType, colors: kitData.colors })
+});
         const mockupData = await mockupRes.json();
         if (mockupData.success) kitData.mockups = mockupData.mockups;
       }
