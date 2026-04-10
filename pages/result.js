@@ -17,42 +17,25 @@ export default function Result() {
     const { default: jsPDF } = await import('jspdf');
     const { default: html2canvas } = await import('html2canvas');
     const element = document.getElementById('brand-kit-content');
-
-    // Fix: prevent image page-break cuts
-    const sections = element.querySelectorAll('.pdf-section');
-    sections.forEach(s => {
-      s.style.pageBreakInside = 'avoid';
-      s.style.breakInside = 'avoid';
-    });
-
     const canvas = await html2canvas(element, {
-      scale: 2,
-      backgroundColor: '#ffffff',
-      useCORS: true,
-      scrollY: 0,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
+      scale: 2, backgroundColor: '#ffffff', useCORS: true,
+      scrollY: 0, windowWidth: element.scrollWidth, windowHeight: element.scrollHeight,
     });
-
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
     let heightLeft = imgHeight;
     let position = 0;
-
     pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
     heightLeft -= pdfHeight;
-
     while (heightLeft > 0) {
       position -= pdfHeight;
       pdf.addPage();
       pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
       heightLeft -= pdfHeight;
     }
-
     pdf.save(`${kit.businessName}-brand-kit.pdf`);
   };
 
@@ -63,7 +46,7 @@ export default function Result() {
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = `${kit.businessName}-logo-${index + 1}.png`;
+      a.download = `${kit.businessName}-logo-collage.png`;
       a.click();
       URL.revokeObjectURL(blobUrl);
     } catch {
@@ -105,11 +88,13 @@ export default function Result() {
     ad_banner: '🎯 Ad Banner Mockup',
   }[kit.mockupType] : 'Mockup';
 
-  // Google Fonts URL from typography
   const fontNames = kit.typography?.map(t => t.name.replace(/ /g, '+')).join('&family=') || '';
-  const googleFontsUrl = fontNames ? `https://fonts.googleapis.com/css2?family=${fontNames}:wght@400;700&family=Inter:wght@400;500;600&display=swap` : `https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap`;
+  const googleFontsUrl = fontNames
+    ? `https://fonts.googleapis.com/css2?family=${fontNames}:wght@400;700&family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap`
+    : `https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap`;
 
-  const brandScore = kit.brandScore || null;
+  const nameRiskColor = { low: '#2e7d32', medium: '#f57c00', high: '#c62828' }[kit.nameCheck?.riskLevel] || '#888';
+  const nameRiskBg = { low: '#f1f8e9', medium: '#fff3e0', high: '#ffebee' }[kit.nameCheck?.riskLevel] || '#f5f5f5';
 
   return (
     <>
@@ -119,7 +104,6 @@ export default function Result() {
       </Head>
 
       <div style={s.page}>
-
         {/* Nav */}
         <div style={s.nav}>
           <img src={LOGO_URL} style={{ width: 36, height: 36, objectFit: 'contain', mixBlendMode: 'multiply' }} alt="NabadAi" />
@@ -133,29 +117,55 @@ export default function Result() {
         <div id="brand-kit-content" style={s.container}>
 
           {/* Header */}
-          <div style={{ ...s.header }} className="pdf-section">
+          <div style={s.header} className="pdf-section">
             <p style={s.eyebrow}>✦ NabadAi Brand Kit</p>
             <h1 style={s.title}>{kit.businessName}</h1>
             <p style={s.subtitle}>{kit.industry} · {kit.businessType === 'product' ? 'Product Business' : 'Service Business'}</p>
           </div>
 
+          {/* Brand Name Check */}
+          {kit.nameCheck && (
+            <Section title="🔍 Brand Name Check">
+              <div style={{ ...s.card, background: nameRiskBg, border: `1px solid ${nameRiskColor}` }} className="pdf-section">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  <span style={{ background: nameRiskColor, color: '#fff', padding: '4px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>
+                    {kit.nameCheck.riskLevel} Risk
+                  </span>
+                  <p style={{ margin: 0, color: nameRiskColor, fontWeight: 600, fontSize: 14 }}>{kit.businessName}</p>
+                </div>
+                <p style={{ color: '#444', fontSize: 14, marginBottom: 12 }}>{kit.nameCheck.assessment}</p>
+                <p style={{ color: '#555', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>💡 {kit.nameCheck.recommendation}</p>
+                {kit.nameCheck.riskLevel !== 'low' && kit.nameCheck.alternatives?.length > 0 && (
+                  <div>
+                    <p style={s.cardLabel}>✨ Alternative Name Suggestions</p>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {kit.nameCheck.alternatives.map((name, i) => (
+                        <span key={i} style={{ background: '#fff', border: `1px solid ${nameRiskColor}`, color: nameRiskColor, padding: '6px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600 }}>{name}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Section>
+          )}
+
           {/* Brand Score */}
-          {brandScore && (
+          {kit.brandScore && (
             <Section title="Brand Strength Score">
               <div style={{ ...s.card, textAlign: 'center' }} className="pdf-section">
                 <div style={{
                   width: 120, height: 120, borderRadius: '50%',
-                  background: `conic-gradient(${primaryColor} ${brandScore.total * 3.6}deg, #e8eaf0 0deg)`,
+                  background: `conic-gradient(${primaryColor} ${kit.brandScore.total * 3.6}deg, #e8eaf0 0deg)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   margin: '0 auto 16px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
                 }}>
                   <div style={{ width: 90, height: 90, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                    <span style={{ fontSize: 28, fontWeight: 700, color: primaryColor }}>{brandScore.total}</span>
+                    <span style={{ fontSize: 28, fontWeight: 700, color: primaryColor }}>{kit.brandScore.total}</span>
                     <span style={{ fontSize: 11, color: '#aaa' }}>/ 100</span>
                   </div>
                 </div>
                 <div style={s.grid2}>
-                  {brandScore.breakdown?.map((b, i) => (
+                  {kit.brandScore.breakdown?.map((b, i) => (
                     <div key={i} style={{ textAlign: 'left' }}>
                       <p style={{ fontSize: 12, color: '#888', margin: '0 0 4px' }}>{b.label}</p>
                       <div style={{ background: '#f0f4ff', borderRadius: 8, height: 8, overflow: 'hidden' }}>
@@ -165,12 +175,12 @@ export default function Result() {
                     </div>
                   ))}
                 </div>
-                {brandScore.tip && <p style={{ color: '#666', fontSize: 13, marginTop: 16, fontStyle: 'italic' }}>💡 {brandScore.tip}</p>}
+                {kit.brandScore.tip && <p style={{ color: '#666', fontSize: 13, marginTop: 16, fontStyle: 'italic' }}>💡 {kit.brandScore.tip}</p>}
               </div>
             </Section>
           )}
 
-          {/* Beat the Competition */}
+          {/* Competitive Edge */}
           {kit.competitiveEdge && (
             <Section title="🏆 Your Competitive Edge">
               <div style={{ ...s.card, borderLeft: `4px solid ${primaryColor}` }} className="pdf-section">
@@ -188,11 +198,9 @@ export default function Result() {
                   <div style={{
                     width: i === 0 ? 72 : i === 1 ? 60 : 48,
                     height: i === 0 ? 72 : i === 1 ? 60 : 48,
-                    borderRadius: '50%',
-                    background: c.hex,
+                    borderRadius: '50%', background: c.hex,
                     boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-                    border: '3px solid #fff',
-                    marginBottom: 8,
+                    border: '3px solid #fff', marginBottom: 8,
                   }} />
                   <p style={{ fontSize: 10, color: '#888', margin: 0, fontFamily: 'monospace' }}>{c.hex}</p>
                   <p style={{ fontSize: 11, color: '#1a237e', margin: '2px 0 0', fontWeight: 600 }}>{c.name}</p>
@@ -211,8 +219,7 @@ export default function Result() {
                   <p style={{ color: '#1a237e', fontSize: 22, fontWeight: 700, margin: '4px 0', fontFamily: `'${t.name}', sans-serif` }}>{t.name}</p>
                   <p style={{ color: '#666', fontSize: 13, margin: 0 }}>{t.style}</p>
                   <p style={{ color: '#aaa', fontSize: 12, margin: '4px 0 8px' }}>Pairs with: {t.pairedWith}</p>
-                  {/* Font preview */}
-                  <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 10, marginTop: 4 }}>
+                  <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 10 }}>
                     <p style={{ fontFamily: `'${t.name}', sans-serif`, fontSize: 18, color: primaryColor, margin: 0, fontWeight: i === 0 ? 700 : 400 }}>
                       The future of your brand starts here.
                     </p>
@@ -234,19 +241,39 @@ export default function Result() {
             ))}
           </Section>
 
-          {/* Logo Concepts */}
-          <Section title="Logo Concept">
-            <div style={s.grid3} className="pdf-section">
-              {kit.logos?.map((url, i) => (
-                <div key={i} style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #e8eaf0', background: 'transparent', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
-                  <div style={{ background: 'repeating-conic-gradient(#f0f0f0 0% 25%, #fff 0% 50%) 0 0 / 16px 16px', padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 140 }}>
-                    <img src={url} alt={`Logo concept ${i + 1}`} style={{ maxWidth: '100%', maxHeight: 120, display: 'block', objectFit: 'contain' }} crossOrigin="anonymous" />
-                  </div>
-                  <div style={{ background: '#fff', padding: '10px', textAlign: 'center', borderTop: '1px solid #e8eaf0' }}>
-                    <button onClick={() => downloadLogo(url, i)} style={{ ...s.btnSecondary, fontSize: 12, padding: '6px 14px', cursor: 'pointer' }}>⬇ Download PNG</button>
+          {/* Logo Collage */}
+          <Section title="Logo Concepts (4 Options)">
+            <div className="pdf-section" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+              {/* Full collage — large */}
+              {kit.logos?.[0] && (
+                <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #e8eaf0', marginBottom: 16, background: '#fff' }}>
+                  <img
+                    src={kit.logos[0]}
+                    alt="Logo concepts collage"
+                    style={{ width: '100%', display: 'block', objectFit: 'contain' }}
+                    crossOrigin="anonymous"
+                  />
+                  <div style={{ padding: 16, display: 'flex', gap: 12, justifyContent: 'center', borderTop: '1px solid #e8eaf0' }}>
+                    <button onClick={() => downloadLogo(kit.logos[0], 0)} style={{ ...s.btnSecondary, fontSize: 13 }}>⬇ Download Collage PNG</button>
                   </div>
                 </div>
-              ))}
+              )}
+              {/* Dark background preview */}
+              {kit.logos?.[0] && (
+                <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #333' }}>
+                  <div style={{ background: '#111', padding: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img
+                      src={kit.logos[0]}
+                      alt="Logo on dark background"
+                      style={{ maxWidth: '60%', maxHeight: 200, objectFit: 'contain', mixBlendMode: 'screen' }}
+                      crossOrigin="anonymous"
+                    />
+                  </div>
+                  <div style={{ background: '#111', padding: '0 16px 16px', textAlign: 'center' }}>
+                    <p style={{ color: '#666', fontSize: 12, margin: '0 0 8px' }}>Dark background preview</p>
+                  </div>
+                </div>
+              )}
             </div>
           </Section>
 
@@ -317,13 +344,13 @@ export default function Result() {
             </div>
           </Section>
 
-          {/* Mockup */}
+          {/* Mockup Collage */}
           {kit.mockups && kit.mockups.length > 0 && (
             <Section title={mockupLabel}>
-              <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #e8eaf0', background: '#f8f9fc', breakInside: 'avoid', pageBreakInside: 'avoid' }} className="pdf-section">
-                <img src={kit.mockups[0]} alt="Mockup" style={{ width: '100%', display: 'block' }} crossOrigin="anonymous" />
-                <div style={{ background: '#fff', padding: '10px', textAlign: 'center', borderTop: '1px solid #e8eaf0' }}>
-                  <a href={kit.mockups[0]} download="mockup.png" style={{ color: '#1a237e', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>⬇ Download Mockup</a>
+              <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #e8eaf0', breakInside: 'avoid', pageBreakInside: 'avoid' }} className="pdf-section">
+                <img src={kit.mockups[0]} alt="Mockup collage" style={{ width: '100%', display: 'block', objectFit: 'contain' }} crossOrigin="anonymous" />
+                <div style={{ background: '#fff', padding: 16, textAlign: 'center', borderTop: '1px solid #e8eaf0' }}>
+                  <a href={kit.mockups[0]} download="mockup-collage.png" style={{ color: '#1a237e', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>⬇ Download Mockup Collage</a>
                 </div>
               </div>
               {kit.productDeliverables && (
@@ -351,10 +378,9 @@ export default function Result() {
             </Section>
           )}
 
-          {/* HTML Email Signature */}
+          {/* Email Signature */}
           <Section title="📧 Email Signature">
             <div style={s.card} className="pdf-section">
-              {/* Preview */}
               <div style={{ borderRadius: 10, border: `1px solid ${accentColor}`, padding: 20, marginBottom: 16, background: '#fafafa' }}>
                 <table cellPadding="0" cellSpacing="0" style={{ fontFamily: 'Inter, sans-serif' }}>
                   <tbody>
@@ -373,8 +399,7 @@ export default function Result() {
                   </tbody>
                 </table>
               </div>
-              {/* Copy HTML */}
-              <pre id="email-signature-html" style={{ display: 'none' }}>{`<table cellpadding="0" cellspacing="0" style="font-family:Inter,sans-serif"><tbody><tr><td style="padding-right:16px;border-right:3px solid ${primaryColor};vertical-align:middle"><div style="width:48px;height:48px;border-radius:50%;background:${primaryColor};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px">${kit.businessName?.[0]}</div></td><td style="padding-left:16px;vertical-align:middle"><p style="margin:0;font-weight:700;color:${primaryColor};font-size:15px">${kit.businessName}</p><p style="margin:2px 0;color:${secondaryColor};font-size:12px">${kit.industry}</p><p style="margin:4px 0 0;color:#888;font-size:11px">Powered by NabadAi</p></td></tr></tbody></table>`}</pre>
+              <pre id="email-signature-html" style={{ display: 'none' }}>{`<table cellpadding="0" cellspacing="0" style="font-family:Inter,sans-serif"><tbody><tr><td style="padding-right:16px;border-right:3px solid ${primaryColor};vertical-align:middle"><div style="width:48px;height:48px;border-radius:50%;background:${primaryColor};color:#fff;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center">${kit.businessName?.[0]}</div></td><td style="padding-left:16px;vertical-align:middle"><p style="margin:0;font-weight:700;color:${primaryColor};font-size:15px">${kit.businessName}</p><p style="margin:2px 0;color:${secondaryColor};font-size:12px">${kit.industry}</p><p style="margin:4px 0 0;color:#888;font-size:11px">Powered by NabadAi</p></td></tr></tbody></table>`}</pre>
               <button onClick={copyEmailSignature} style={{ ...s.btnPrimary, width: '100%' }}>
                 {copied ? '✅ Copied!' : '📋 Copy HTML Signature'}
               </button>
