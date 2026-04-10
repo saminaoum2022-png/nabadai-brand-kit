@@ -16,6 +16,18 @@ const LOADING_MESSAGES = [
   "Almost ready...",
 ];
 
+const MOCKUP_OPTIONS = [
+  { id: 'website_hero', label: '🖥️ Website Hero', for: 'both' },
+  { id: 'instagram_post', label: '📱 Instagram Post', for: 'both' },
+  { id: 'business_card', label: '💼 Business Card', for: 'both' },
+  { id: 'packaging', label: '📦 Packaging', for: 'product' },
+  { id: 'product_shot', label: '🛍️ Product Shot', for: 'product' },
+  { id: 'ecommerce_listing', label: '🛒 E-commerce Listing', for: 'product' },
+  { id: 'proposal_cover', label: '📄 Proposal Cover', for: 'service' },
+  { id: 'email_header', label: '📧 Email Header', for: 'service' },
+  { id: 'ad_banner', label: '🎯 Ad Banner', for: 'both' },
+];
+
 function LogoLoader() {
   const [msgIndex, setMsgIndex] = useState(0);
   useEffect(() => {
@@ -71,7 +83,6 @@ function LogoLoader() {
       <div style={{ position: "relative", width: 200, height: 200, marginBottom: 40 }}>
         <div style={{ position: "absolute", inset: -20, borderRadius: "50%", background: "radial-gradient(circle, rgba(26,35,126,0.08) 0%, transparent 70%)", animation: "corePulse 2.4s ease-in-out infinite" }} />
         <div style={{ position: "absolute", top: "50%", left: "10%", width: "80%", height: 2, background: "linear-gradient(90deg, transparent, #1a237e, transparent)", borderRadius: 2, animation: "scanLine 2.4s ease-in-out infinite", zIndex: 10 }} />
-
         <div className="ring1-wrap" style={{ position: "absolute", inset: 0 }}>
           <img src={LOGO_URL} style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.6, mixBlendMode: "multiply" }} alt="" />
         </div>
@@ -81,9 +92,7 @@ function LogoLoader() {
         <div className="ring3-wrap" style={{ position: "absolute", inset: 40 }}>
           <img src={LOGO_URL} style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.9, mixBlendMode: "multiply" }} alt="" />
         </div>
-
         <div className="core-wrap" style={{ position: "absolute", inset: 70, borderRadius: "50%", background: "radial-gradient(circle, rgba(26,35,126,0.15) 0%, transparent 70%)" }} />
-
         {[0, 60, 120, 180, 240, 300].map((deg, i) => (
           <div key={i} style={{
             position: "absolute", top: "50%", left: "50%",
@@ -92,7 +101,6 @@ function LogoLoader() {
             boxShadow: `0 0 6px ${i % 2 === 0 ? "#1a237e" : "#4fc3f7"}`,
             transform: `rotate(${deg}deg) translateX(95px)`,
             animation: `ring${(i % 3) + 1} ${2.5 + i * 0.3}s ease-in-out infinite`,
-            transformOrigin: "-95px 0",
           }} />
         ))}
       </div>
@@ -117,7 +125,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     businessName: '', industry: '', description: '',
-    audience: '', budget: '', businessType: 'product', productType: ''
+    audience: '', budget: '', businessType: 'product', productType: '',
+    logoStyle: '', logoSymbol: '', inspirationBrands: '', avoidInLogo: '',
+    mockupType: ''
   });
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -137,15 +147,26 @@ export default function Home() {
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
       let kitData = data.data;
-      if (form.businessType === 'product') {
+
+      if (form.mockupType) {
         const mockupRes = await fetch('/api/mockup', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ businessName: form.businessName, industry: form.industry, productType: form.productType, colors: kitData.colors })
-});
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessName: form.businessName,
+            industry: form.industry,
+            description: form.description,
+            audience: form.audience,
+            productType: form.productType,
+            businessType: form.businessType,
+            mockupType: form.mockupType,
+            colors: kitData.colors
+          })
+        });
         const mockupData = await mockupRes.json();
         if (mockupData.success) kitData.mockups = mockupData.mockups;
       }
+
       sessionStorage.setItem('brandKit', JSON.stringify(kitData));
       router.push('/result');
     } catch (err) {
@@ -155,6 +176,8 @@ export default function Home() {
   };
 
   if (loading) return <LogoLoader />;
+
+  const availableMockups = MOCKUP_OPTIONS.filter(m => m.for === 'both' || m.for === form.businessType);
 
   return (
     <>
@@ -180,11 +203,11 @@ export default function Home() {
               <div style={s.section}>
                 <p style={s.sectionLabel}>What are you building?</p>
                 <div style={s.toggle}>
-                  <button type="button" onClick={() => setForm({ ...form, businessType: 'product' })}
+                  <button type="button" onClick={() => setForm({ ...form, businessType: 'product', mockupType: '' })}
                     style={form.businessType === 'product' ? s.toggleActive : s.toggleInactive}>
                     Product Business
                   </button>
-                  <button type="button" onClick={() => setForm({ ...form, businessType: 'service' })}
+                  <button type="button" onClick={() => setForm({ ...form, businessType: 'service', mockupType: '' })}
                     style={form.businessType === 'service' ? s.toggleActive : s.toggleInactive}>
                     Service Business
                   </button>
@@ -238,10 +261,65 @@ export default function Home() {
 
               <div style={s.divider} />
 
+              <p style={s.sectionLabel}>Logo Preferences</p>
+              <div style={s.grid}>
+                <div>
+                  <label style={s.label}>Logo Style</label>
+                  <select name="logoStyle" value={form.logoStyle} onChange={handleChange} style={s.input}>
+                    <option value="">Select style</option>
+                    <option value="Minimal">Minimal</option>
+                    <option value="Luxury">Luxury</option>
+                    <option value="Playful">Playful</option>
+                    <option value="Bold">Bold</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Elegant">Elegant</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={s.label}>Logo Symbol</label>
+                  <select name="logoSymbol" value={form.logoSymbol} onChange={handleChange} style={s.input}>
+                    <option value="">Select symbol</option>
+                    <option value="Abstract icon">Abstract Icon</option>
+                    <option value="Letter mark">Letter Mark</option>
+                    <option value="Animal">Animal</option>
+                    <option value="Object">Object</option>
+                    <option value="Geometric shape">Geometric Shape</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={s.grid}>
+                <div>
+                  <label style={s.label}>Inspiration Brands</label>
+                  <input name="inspirationBrands" value={form.inspirationBrands} onChange={handleChange}
+                    placeholder="e.g. Apple, Notion, Nike" style={s.input} />
+                </div>
+                <div>
+                  <label style={s.label}>Avoid in Logo</label>
+                  <input name="avoidInLogo" value={form.avoidInLogo} onChange={handleChange}
+                    placeholder="e.g. gradients, animals, shields" style={s.input} />
+                </div>
+              </div>
+
+              <div style={s.divider} />
+
+              <p style={s.sectionLabel}>Choose Your Mockup (Pick 1)</p>
+              <div style={s.mockupGrid}>
+                {availableMockups.map((m) => (
+                  <button key={m.id} type="button"
+                    onClick={() => setForm({ ...form, mockupType: form.mockupType === m.id ? '' : m.id })}
+                    style={form.mockupType === m.id ? s.mockupActive : s.mockupInactive}>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={s.divider} />
+
               <div style={s.deliverables}>
                 <p style={s.delTitle}>What you'll receive</p>
                 <div style={s.delGrid}>
-                  {['Color Palette', 'Typography', '3 Slogans', 'Brand Voice', 'Legal Guide', 'Marketing Kit', 'Logo Concepts', form.businessType === 'product' ? 'Mockups' : 'Service Kit', 'PDF Download'].map((item) => (
+                  {['Color Palette', 'Typography', '3 Slogans', 'Brand Voice', 'Legal Guide', 'Marketing Kit', 'Logo Concept', '1 Mockup', 'PDF Download'].map((item) => (
                     <div key={item} style={s.delItem}>
                       <span style={s.delDot} />
                       {item}
@@ -280,6 +358,9 @@ const s = {
   label: { display: 'block', color: '#555', fontSize: '12px', fontWeight: '600', marginBottom: '8px', letterSpacing: '0.5px', textTransform: 'uppercase' },
   input: { width: '100%', background: '#f8f9fc', border: '1px solid #e8eaf0', borderRadius: '10px', padding: '12px 14px', color: '#1a237e', fontSize: '14px', boxSizing: 'border-box', outline: 'none', fontFamily: "'Inter', sans-serif" },
   textarea: { width: '100%', background: '#f8f9fc', border: '1px solid #e8eaf0', borderRadius: '10px', padding: '12px 14px', color: '#1a237e', fontSize: '14px', boxSizing: 'border-box', outline: 'none', resize: 'vertical', fontFamily: "'Inter', sans-serif" },
+  mockupGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '8px' },
+  mockupActive: { padding: '10px 8px', background: '#1a237e', border: 'none', borderRadius: '10px', color: '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: '600', textAlign: 'center' },
+  mockupInactive: { padding: '10px 8px', background: '#f5f7ff', border: '1px solid #e0e4f0', borderRadius: '10px', color: '#555', cursor: 'pointer', fontSize: '13px', textAlign: 'center' },
   deliverables: { background: '#f5f7ff', borderRadius: '12px', padding: '20px', marginBottom: '28px' },
   delTitle: { color: '#1a237e', fontSize: '12px', fontWeight: '700', margin: '0 0 14px', letterSpacing: '1px', textTransform: 'uppercase' },
   delGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' },
