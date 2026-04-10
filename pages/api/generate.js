@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-async function generateWithReplicate(prompt, negativePrompt) {
+async function generateWithReplicate(prompt, negativePrompt, width = 1024, height = 1024) {
   try {
     const startRes = await fetch("https://api.replicate.com/v1/models/black-forest-labs/flux-pro/predictions", {
       method: "POST",
@@ -11,13 +11,7 @@ async function generateWithReplicate(prompt, negativePrompt) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        input: {
-          prompt,
-          negative_prompt: negativePrompt,
-          width: 1024,
-          height: 1024,
-          steps: 30
-        }
+        input: { prompt, negative_prompt: negativePrompt, width, height, steps: 30 }
       })
     });
 
@@ -46,64 +40,62 @@ async function generateWithReplicate(prompt, negativePrompt) {
   }
 }
 
-async function generateWithDalle(prompt) {
+async function generateWithDalle(prompt, size = '1024x1024') {
   const response = await openai.images.generate({
     model: 'dall-e-3',
     prompt,
     n: 1,
-    size: '1024x1024',
+    size,
     quality: 'hd',
     style: 'natural'
   });
   return response.data[0].url;
 }
 
-async function generateImage(replicatePrompt, dallePrompt, negativePrompt) {
-  const replicateUrl = await generateWithReplicate(replicatePrompt, negativePrompt);
+async function generateImage(replicatePrompt, dallePrompt, negativePrompt, width = 1024, height = 1024) {
+  const replicateUrl = await generateWithReplicate(replicatePrompt, negativePrompt, width, height);
   if (replicateUrl) return replicateUrl;
   return await generateWithDalle(dallePrompt);
 }
 
-function buildLogoConfig(businessName, industry, description, audience, logoStyle, logoSymbol, inspirationBrands, avoidInLogo, colors) {
+function buildLogoCollageConfig(businessName, industry, description, audience, logoStyle, logoSymbol, inspirationBrands, avoidInLogo, colors) {
   const style = logoStyle || 'Minimal';
   const symbol = logoSymbol || 'Abstract icon';
-  const inspiration = inspirationBrands ? `Inspired by the design style of: ${inspirationBrands}.` : '';
+  const inspiration = inspirationBrands ? `Inspired by: ${inspirationBrands}.` : '';
   const avoid = avoidInLogo ? `Avoid: ${avoidInLogo}.` : '';
 
-  // Extract palette colors for logo
   const primaryHex = colors?.[0]?.hex || '#1a237e';
   const secondaryHex = colors?.[1]?.hex || '#4fc3f7';
-  const colorInstruction = `Use ONLY these brand colors in the logo: primary ${primaryHex} and secondary ${secondaryHex}.`;
 
-  const negativePrompt = `white background, colored background, background fill, photorealistic, 3d render, shadows, gradients, clipart, watermark, blurry, low quality, extra text, random letters, distorted shapes, cartoon, illustration style, busy background, neon, glow effects, badge, shield, ribbon${avoidInLogo ? ', ' + avoidInLogo : ''}`;
+  const negativePrompt = `photorealistic, 3d render, shadows, gradients, clipart, watermark, blurry, low quality, distorted shapes, cartoon, busy background, neon, glow effects${avoidInLogo ? ', ' + avoidInLogo : ''}`;
 
-  const replicatePrompt = `${style} flat vector logo for "${businessName}", a ${industry} brand. Business: ${description}. Target audience: ${audience}. Symbol type: ${symbol} that visually represents the core essence of this business. ${colorInstruction} ${inspiration} ${avoid} TRANSPARENT background, bold geometric shapes, no gradients, no shadows, print ready, professional brand identity, single color mark above clean wordmark. PNG with transparency.`;
+  const replicatePrompt = `A large professional sheet showing exactly 4 different ${style} flat vector logo concepts for "${businessName}" — a ${industry} brand. ${description}. Arranged in a 2x2 grid, each logo in its own clearly separated white box. Each concept uses brand colors ${primaryHex} and ${secondaryHex}. Symbol: ${symbol}. ${inspiration} ${avoid} Each logo is unique — wordmark, lettermark, icon+text, and abstract symbol variations. Clean white background per cell, bold typography, no gradients, print-ready, professional brand identity sheet. Large text labels under each: "Option 1", "Option 2", "Option 3", "Option 4".`;
 
-  const dallePrompt = `${style} professional vector logo for "${businessName}" — a ${industry} brand. ${description}. Symbol: ${symbol} representing the business concept. ${colorInstruction} ${inspiration} ${avoid} TRANSPARENT background (no white fill, no colored background), flat design, no gradients, bold shapes, high contrast, print-ready, clean wordmark below icon. The background must be fully transparent.`;
+  const dallePrompt = `A professional brand identity sheet showing 4 different logo concepts for "${businessName}" — a ${industry} brand arranged in a 2x2 grid. Each logo in its own white cell clearly separated. Brand colors: ${primaryHex} and ${secondaryHex}. ${style} flat design style. Symbol concept: ${symbol}. ${inspiration} ${avoid} Four variations: text-only wordmark, letter mark, icon with text, abstract symbol. No gradients, clean, print-ready. Labels: "Option 1", "Option 2", "Option 3", "Option 4". Large high-resolution sheet.`;
 
   return { replicate: replicatePrompt, dalle: dallePrompt, negative: negativePrompt };
 }
 
-function buildMockupPrompt(businessName, industry, description, mockupType, businessType, productType, colors) {
+function buildMockupCollageConfig(businessName, industry, description, mockupType, businessType, productType, colors) {
   const primaryHex = colors?.[0]?.hex || '#1a237e';
   const secondaryHex = colors?.[1]?.hex || '#4fc3f7';
   const accentHex = colors?.[2]?.hex || '#e8eaf0';
-  const colorInstruction = `Use ONLY these exact brand colors: ${primaryHex} as primary, ${secondaryHex} as secondary, ${accentHex} as accent.`;
+  const colorInstruction = `Brand colors: ${primaryHex} as primary, ${secondaryHex} as secondary, ${accentHex} as accent.`;
 
-  const mockupPrompts = {
-    website_hero: `Premium website hero section mockup for "${businessName}" — ${industry} brand. ${colorInstruction} Clean desktop browser frame, hero headline, CTA button in brand colors, professional layout. Photorealistic UI mockup.`,
-    instagram_post: `Instagram post mockup for "${businessName}" — ${industry} brand. ${colorInstruction} Square format, branded typography, lifestyle imagery relevant to ${description}. Premium social media aesthetic.`,
-    business_card: `Premium business card mockup for "${businessName}" — ${industry}. ${colorInstruction} Both sides shown, embossed logo, clean typography, luxury finish. Studio lighting, white surface.`,
-    packaging: `Product packaging mockup for "${businessName}" — ${productType || industry}. ${colorInstruction} Premium unboxing experience, branded box/bag/container relevant to ${productType || 'the product'}. Studio lighting, clean background.`,
-    product_shot: `Professional product photography mockup for "${businessName}" — ${productType || industry}. ${colorInstruction} Hero product shot, lifestyle context relevant to ${description}. Premium commercial photography style.`,
-    ecommerce_listing: `E-commerce product listing mockup for "${businessName}" on a premium marketplace. ${colorInstruction} Product image, title, price, reviews, add to cart button. Clean UI, professional layout.`,
-    proposal_cover: `Professional proposal cover page for "${businessName}" — ${industry} services. ${colorInstruction} Executive presentation style, company name, tagline, premium typography. A4 format.`,
-    email_header: `Email newsletter header mockup for "${businessName}" — ${industry}. ${colorInstruction} Branded header banner, logo placement, headline text. Clean email template style.`,
-    ad_banner: `Digital advertising banner for "${businessName}" — ${industry}. ${colorInstruction} Compelling headline, CTA button, product/service visual. Premium ad creative, multiple sizes shown.`,
+  const collagePrompts = {
+    packaging: `A large professional product packaging collage for "${businessName}" — ${productType || industry} brand. ${colorInstruction} 4 angles in one image: front view, side view, open box unboxing shot, and lifestyle flat lay. Premium packaging design, studio lighting, clean background. All using exact brand colors.`,
+    business_card: `A professional business card collage for "${businessName}" — ${industry}. ${colorInstruction} 4 views: front face, back face, stack of cards, and hand holding card lifestyle shot. Premium finish, embossed logo, clean typography. Studio lighting.`,
+    instagram_post: `A social media content collage for "${businessName}" — ${industry}. ${colorInstruction} 4 Instagram post mockups in one image: product hero shot, lifestyle scene, quote card, and promotional post. All using exact brand colors and consistent aesthetic.`,
+    website_hero: `A website mockup collage for "${businessName}" — ${industry}. ${colorInstruction} 4 views: desktop hero section, mobile homepage, tablet view, and close-up of CTA button. Premium UI design, brand colors throughout.`,
+    product_shot: `A professional product photography collage for "${businessName}" — ${productType || industry}. ${colorInstruction} 4 angles: hero front shot, 45-degree angle, lifestyle context, and detail close-up. Commercial photography style, studio lighting, brand colors in props and background.`,
+    proposal_cover: `A professional proposal and document collage for "${businessName}" — ${industry} services. ${colorInstruction} 4 views: proposal cover page, inside spread, tablet mockup showing document, and printed version on desk. Executive presentation style.`,
+    ad_banner: `A digital advertising collage for "${businessName}" — ${industry}. ${colorInstruction} 4 ad formats in one image: Facebook banner, Instagram story, Google display ad, and LinkedIn post. All using exact brand colors, compelling headline, CTA button.`,
+    email_header: `An email marketing collage for "${businessName}" — ${industry}. ${colorInstruction} 4 views: email header banner, full email template on desktop, mobile email view, and email in inbox preview. Brand colors throughout.`,
+    ecommerce_listing: `An e-commerce listing collage for "${businessName}" — ${productType || industry}. ${colorInstruction} 4 views: main listing image, lifestyle shot, size/detail infographic, and product in use. Professional commercial photography style.`,
   };
 
-  const prompt = mockupPrompts[mockupType] || `Professional brand mockup for "${businessName}" — ${industry}. ${colorInstruction} Premium presentation, clean background.`;
-  const negative = 'blurry, low quality, watermark, distorted, amateur, generic, wrong colors, white background only';
+  const prompt = collagePrompts[mockupType] || `A professional brand collage for "${businessName}" — ${industry}. ${colorInstruction} 4 different brand touchpoints in one large image. Premium presentation, clean backgrounds, exact brand colors.`;
+  const negative = 'blurry, low quality, watermark, distorted, amateur, wrong colors, inconsistent style';
 
   return { replicate: prompt, dalle: prompt, negative };
 }
@@ -132,90 +124,91 @@ CRITICAL RULES — NEVER BREAK THESE:
 - Hashtags must be niche-specific — never generic like #business #success #entrepreneur
 - Competitor gaps must reflect REAL gaps in THIS specific industry
 - Color choices must reflect the psychology of THIS industry and audience
-- Typography must be UNIQUE per industry — never default to "Inter" or "Montserrat" for every brand. A luxury jewelry brand needs different fonts than a tech startup or a food brand. Pick fonts that are SPECIFIC to the brand personality.
-- If any section feels generic, you have failed the task
-- Think deeply about what makes THIS business unique before writing anything
-- For brandScore: score honestly based on the inputs provided — clarity of concept, audience definition, market differentiation, name strength, and description quality`
+- Typography must be UNIQUE per industry — never default to "Inter" or "Montserrat" for every brand
+- For brandScore: score honestly based on inputs — clarity, audience definition, differentiation, name strength
+- For nameCheck: honestly assess trademark risk based on industry and name uniqueness`
       }, {
         role: 'user',
-        content: `Generate a complete brand kit for this business:
+        content: `Generate a complete brand kit for:
 
 Business Name: ${businessName}
 Industry: ${industry}
 Description: ${description}
 Target Audience: ${audience}
 Budget Range: ${budget}
-Type: ${businessType} (product or service)
+Type: ${businessType}
 ${productType ? `Product Type: ${productType}` : ''}
-${logoStyle ? `Logo Style Preference: ${logoStyle}` : ''}
-${logoSymbol ? `Logo Symbol Preference: ${logoSymbol}` : ''}
+${logoStyle ? `Logo Style: ${logoStyle}` : ''}
+${logoSymbol ? `Logo Symbol: ${logoSymbol}` : ''}
 ${inspirationBrands ? `Brand Inspirations: ${inspirationBrands}` : ''}
 ${avoidInLogo ? `Avoid in Logo: ${avoidInLogo}` : ''}
 
-Return ONLY valid JSON in this exact format:
+Return ONLY valid JSON:
 {
   "colors": [
-    {"name": "Primary", "hex": "#XXXXXX", "usage": "Specific usage for THIS brand"},
-    {"name": "Secondary", "hex": "#XXXXXX", "usage": "Specific usage for THIS brand"},
-    {"name": "Accent", "hex": "#XXXXXX", "usage": "Specific usage for THIS brand"},
-    {"name": "Neutral", "hex": "#XXXXXX", "usage": "Specific usage for THIS brand"},
-    {"name": "Dark", "hex": "#XXXXXX", "usage": "Specific usage for THIS brand"}
+    {"name": "Primary", "hex": "#XXXXXX", "usage": "Specific usage"},
+    {"name": "Secondary", "hex": "#XXXXXX", "usage": "Specific usage"},
+    {"name": "Accent", "hex": "#XXXXXX", "usage": "Specific usage"},
+    {"name": "Neutral", "hex": "#XXXXXX", "usage": "Specific usage"},
+    {"name": "Dark", "hex": "#XXXXXX", "usage": "Specific usage"}
   ],
   "typography": [
-    {"role": "Heading Font", "name": "Google Font name specific to this brand personality", "style": "Why this font fits THIS brand specifically — not generic reasons", "pairedWith": "Body font name"},
-    {"role": "Body Font", "name": "Google Font name specific to this brand personality", "style": "Why this font fits THIS brand specifically — not generic reasons", "pairedWith": "Heading font name"}
+    {"role": "Heading Font", "name": "Unique Google Font for this brand", "style": "Why specific to this brand", "pairedWith": "Body font"},
+    {"role": "Body Font", "name": "Unique Google Font for this brand", "style": "Why specific to this brand", "pairedWith": "Heading font"}
   ],
-  "slogans": ["Slogan unique to ${businessName}", "Slogan unique to ${businessName}", "Slogan unique to ${businessName}"],
-  "brandVoice": {
-    "tone": "Specific tone for THIS audience: ${audience}",
-    "doList": ["Specific do for THIS brand", "Specific do for THIS brand", "Specific do for THIS brand"],
-    "dontList": ["Specific dont for THIS brand", "Specific dont for THIS brand"],
-    "captions": ["Caption specific to ${businessName}", "Caption specific to ${businessName}", "Caption specific to ${businessName}", "Caption specific to ${businessName}", "Caption specific to ${businessName}"]
+  "slogans": ["Unique slogan 1", "Unique slogan 2", "Unique slogan 3"],
+  "nameCheck": {
+    "riskLevel": "low | medium | high",
+    "assessment": "Specific assessment of '${businessName}' trademark risk in ${industry} industry",
+    "alternatives": ["Alternative name 1 if medium/high risk", "Alternative name 2", "Alternative name 3"],
+    "recommendation": "Clear recommendation — keep the name or switch and why"
   },
   "brandScore": {
-    "total": <number 0-100>,
+    "total": <0-100>,
     "breakdown": [
       {"label": "Concept Clarity", "score": <0-100>},
       {"label": "Audience Definition", "score": <0-100>},
       {"label": "Market Differentiation", "score": <0-100>},
       {"label": "Name Strength", "score": <0-100>}
     ],
-    "tip": "One specific actionable tip to improve their brand score"
+    "tip": "One specific actionable improvement tip"
   },
   "competitiveEdge": {
-    "idea": "One bold, creative, specific idea that will make ${businessName} stand out from ALL competitors in ${industry}",
-    "explanation": "Why this specific idea works for THIS brand, THIS audience, and THIS market — with concrete reasoning"
+    "idea": "One bold creative idea to beat all competitors in ${industry}",
+    "explanation": "Why this works for this specific brand and audience"
+  },
+  "brandVoice": {
+    "tone": "Specific tone for ${audience}",
+    "doList": ["Do 1", "Do 2", "Do 3"],
+    "dontList": ["Dont 1", "Dont 2"],
+    "captions": ["Caption 1", "Caption 2", "Caption 3", "Caption 4", "Caption 5"]
   },
   "legal": {
-    "trademarkAdvice": "Specific trademark advice for ${industry} industry",
-    "businessStructure": "Recommended structure for THIS type of business in THIS industry",
-    "ipProtection": ["Specific IP tip for ${industry}", "Specific IP tip for ${industry}", "Specific IP tip for ${industry}"],
-    "termsHighlights": ["Specific term for ${businessType} business", "Specific term for ${businessType} business"],
-    "privacyHighlights": ["Privacy point specific to ${industry}", "Privacy point specific to ${industry}"]
+    "trademarkAdvice": "Specific to ${industry}",
+    "businessStructure": "Recommended for this business",
+    "ipProtection": ["Tip 1", "Tip 2", "Tip 3"],
+    "termsHighlights": ["Term 1", "Term 2"],
+    "privacyHighlights": ["Privacy 1", "Privacy 2"]
   },
   "marketing": {
-    "hashtags": ["#NicheTag1", "#NicheTag2", "#NicheTag3", "#NicheTag4", "#NicheTag5"],
-    "competitorGaps": ["Real gap in ${industry} market", "Real gap in ${industry} market", "Real gap in ${industry} market"],
-    "audienceProfile": "Deep profile of ${audience} — their lifestyle, values, pain points, buying triggers",
-    "contentCalendar": ["Week 1 theme specific to ${businessName}", "Week 2 theme specific to ${businessName}", "Week 3 theme specific to ${businessName}", "Week 4 theme specific to ${businessName}"]
+    "hashtags": ["#Tag1", "#Tag2", "#Tag3", "#Tag4", "#Tag5"],
+    "competitorGaps": ["Gap 1", "Gap 2", "Gap 3"],
+    "audienceProfile": "Deep profile of target audience",
+    "contentCalendar": ["Week 1", "Week 2", "Week 3", "Week 4"]
   },
   "productDeliverables": {
-    "packagingConcepts": ["Concept specific to ${productType || industry}", "Concept specific to ${productType || industry}", "Concept specific to ${productType || industry}"],
-    "photographyStyle": "Photography style specific to ${productType || industry} products",
-    "unboxingExperience": "Unboxing experience tailored to ${audience}",
-    "listingCopy": "E-commerce listing copy written specifically for ${businessName}"
+    "packagingConcepts": ["Concept 1", "Concept 2", "Concept 3"],
+    "photographyStyle": "Specific style",
+    "unboxingExperience": "Specific experience",
+    "listingCopy": "Specific copy"
   },
   "serviceDeliverables": {
-    "proposalTemplate": "Proposal structure specific to ${industry} services",
-    "pricingGuide": "Pricing strategy for ${industry} targeting ${audience}",
-    "onboardingChecklist": ["Step specific to ${industry}", "Step specific to ${industry}", "Step specific to ${industry}", "Step specific to ${industry}"],
-    "socialBio": "Bio written specifically for ${businessName} targeting ${audience}"
+    "proposalTemplate": "Specific structure",
+    "pricingGuide": "Specific strategy",
+    "onboardingChecklist": ["Step 1", "Step 2", "Step 3", "Step 4"],
+    "socialBio": "Specific bio"
   },
-  "midjourneyPrompts": [
-    "Detailed Midjourney prompt for ${businessName} logo concept 1",
-    "Detailed Midjourney prompt for ${businessName} logo concept 2",
-    "Detailed Midjourney prompt for ${businessName} logo concept 3"
-  ]
+  "midjourneyPrompts": ["Prompt 1", "Prompt 2", "Prompt 3"]
 }`
       }],
       response_format: { type: 'json_object' }
@@ -223,25 +216,31 @@ Return ONLY valid JSON in this exact format:
 
     const kitData = JSON.parse(brandKit.choices[0].message.content);
 
-    // Generate logo using palette colors
-    const logoConfig = buildLogoConfig(
+    // Generate logo collage (4-in-1) + mockup collage in parallel
+    const logoConfig = buildLogoCollageConfig(
       businessName, industry, description, audience,
       logoStyle, logoSymbol, inspirationBrands, avoidInLogo,
       kitData.colors
     );
-    const logoUrl = await generateImage(logoConfig.replicate, logoConfig.dalle, logoConfig.negative);
-    kitData.logos = [logoUrl];
 
-    // Generate mockup using palette colors
+    const imagePromises = [
+      generateImage(logoConfig.replicate, logoConfig.dalle, logoConfig.negative, 1024, 1024)
+    ];
+
     if (mockupType) {
-      const mockupConfig = buildMockupPrompt(
+      const mockupConfig = buildMockupCollageConfig(
         businessName, industry, description, mockupType,
         businessType, productType, kitData.colors
       );
-      const mockupUrl = await generateImage(mockupConfig.replicate, mockupConfig.dalle, mockupConfig.negative);
-      kitData.mockups = [mockupUrl];
+      imagePromises.push(
+        generateImage(mockupConfig.replicate, mockupConfig.dalle, mockupConfig.negative, 1024, 1024)
+      );
     }
 
+    const [logoUrl, mockupUrl] = await Promise.all(imagePromises);
+
+    kitData.logos = [logoUrl];
+    kitData.mockups = mockupUrl ? [mockupUrl] : [];
     kitData.businessName = businessName;
     kitData.businessType = businessType;
     kitData.industry = industry;
