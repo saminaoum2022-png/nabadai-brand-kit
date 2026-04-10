@@ -7,7 +7,7 @@ async function generateWithReplicate(prompt, negativePrompt) {
     const startRes = await fetch("https://api.replicate.com/v1/models/black-forest-labs/flux-pro/predictions", {
       method: "POST",
       headers: {
-        "Authorization": `Token ${process.env.REPLICATE_API_KEY}`,
+        "Authorization": `Bearer ${process.env.REPLICATE_API_TOKEN}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
@@ -28,7 +28,7 @@ async function generateWithReplicate(prompt, negativePrompt) {
     for (let i = 0; i < 30; i++) {
       await new Promise(r => setTimeout(r, 3000));
       const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-        headers: { "Authorization": `Token ${process.env.REPLICATE_API_KEY}` }
+        headers: { "Authorization": `Bearer ${process.env.REPLICATE_API_TOKEN}` }
       });
       result = await pollRes.json();
       if (result.status === 'succeeded') break;
@@ -163,7 +163,7 @@ Return ONLY valid JSON in this exact format:
     const logoConfigs = [
       {
         replicate: `Minimal flat vector logo for "${businessName}", a ${industry} brand described as: ${description}. Target audience: ${audience}. Single icon mark that visually represents the core service/product, above clean wordmark. White background, bold geometric shapes, no gradients, no shadows, print ready, professional brand identity`,
-        dalle: `Professional minimal vector logo for "${businessName}", a ${industry} company: ${description}. The icon should visually represent what the business does. Clean icon mark + wordmark. Flat design, white background, no gradients, bold shapes. High contrast, print-ready.`
+        dalle: `Professional minimal vector logo for "${businessName}", a ${industry} company: ${description}. The icon should visually represent what the business does. Clean icon mark plus wordmark. Flat design, white background, no gradients, bold shapes. High contrast, print-ready.`
       },
       {
         replicate: `Modern luxury logo for "${businessName}", ${industry} brand. Business: ${description}. Audience: ${audience}. Abstract geometric symbol inspired by the industry and service, combined with elegant sans-serif wordmark. Monochrome black on white, scalable vector style, no decorative elements, no shadows`,
