@@ -79,24 +79,38 @@ Return ONLY valid JSON in this exact format:
 
     const kitData = JSON.parse(brandKit.choices[0].message.content);
 
-    // 2. Generate 3 logo concepts via DALL-E 3
+    // 2. Generate 3 logo concepts via Replicate Flux Pro
     const logoPrompts = [
-      `Professional minimal vector logo for "${businessName}" in ${industry}. Clean icon mark + wordmark. Flat design, white background, no gradients, bold shapes, modern tech aesthetic. High contrast, print-ready.`,
-`Luxury modern logo for "${businessName}" — ${industry} brand. Geometric symbol combined with elegant sans-serif wordmark. Monochrome, scalable, white background. No decorative elements, no shadows.`,
-`Creative brand identity logo for "${businessName}". Industry: ${industry}. Abstract icon that represents innovation and trust. Flat vector style, white background, strong visual identity, suitable for app icon and business card.`,
-];
-    
+      `Minimal flat vector logo for "${businessName}", ${industry} brand, single icon mark above clean wordmark, white background, bold geometric shapes, no gradients, no shadows, no text other than brand name, print ready, professional brand identity`,
+      `Modern luxury logo for "${businessName}", ${industry} industry, abstract geometric symbol combined with elegant sans-serif wordmark, monochrome black on white, scalable vector style, no decorative elements, no shadows, no extra text`,
+      `Creative minimal logo mark for "${businessName}", ${industry} sector, flat icon representing innovation and trust, white background, strong visual identity, suitable for app icon and business card, clean vector design, no gradients`
+    ];
+
+    const logoNegativePrompt = "photorealistic, 3d render, shadows, gradients, clipart, watermark, blurry, low quality, extra text, random letters, distorted shapes, cartoon, illustration style, busy background, multiple colors, neon, glow effects, badge, shield, ribbon";
+
     const logoImages = await Promise.all(
-      logoPrompts.map(prompt =>
-        openai.images.generate({
-          model: 'dall-e-3',
-          prompt,
-          n: 1,
-          size: '1024x1024',
-          quality: 'hd',
-          style: 'natural'
-        }).then(r => r.data[0].url)
-      )
+      logoPrompts.map(async (prompt) => {
+        const response = await fetch("https://api.replicate.com/v1/models/black-forest-labs/flux-pro/predictions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Token ${process.env.REPLICATE_API_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "wait"
+          },
+          body: JSON.stringify({
+            input: {
+              prompt,
+              negative_prompt: logoNegativePrompt,
+              width: 1024,
+              height: 1024,
+              steps: 30
+            }
+          })
+        });
+
+        const prediction = await response.json();
+        return prediction.output?.[0] || prediction.output;
+      })
     );
 
     kitData.logos = logoImages;
