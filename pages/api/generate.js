@@ -42,7 +42,7 @@ async function generateWithReplicate(prompt, negativePrompt) {
 
   } catch (err) {
     console.warn('Replicate failed, falling back to DALL-E:', err.message);
-    return null; // triggers fallback
+    return null;
   }
 }
 
@@ -162,16 +162,16 @@ Return ONLY valid JSON in this exact format:
 
     const logoConfigs = [
       {
-        replicate: `Minimal flat vector logo for "${businessName}", ${industry} brand, single icon mark above clean wordmark, white background, bold geometric shapes, no gradients, no shadows, no text other than brand name, print ready, professional brand identity`,
-        dalle: `Professional minimal vector logo for "${businessName}" in ${industry}. Clean icon mark + wordmark. Flat design, white background, no gradients, bold shapes, modern tech aesthetic. High contrast, print-ready.`
+        replicate: `Minimal flat vector logo for "${businessName}", a ${industry} brand described as: ${description}. Target audience: ${audience}. Single icon mark that visually represents the core service/product, above clean wordmark. White background, bold geometric shapes, no gradients, no shadows, print ready, professional brand identity`,
+        dalle: `Professional minimal vector logo for "${businessName}", a ${industry} company: ${description}. The icon should visually represent what the business does. Clean icon mark + wordmark. Flat design, white background, no gradients, bold shapes. High contrast, print-ready.`
       },
       {
-        replicate: `Modern luxury logo for "${businessName}", ${industry} industry, abstract geometric symbol combined with elegant sans-serif wordmark, monochrome black on white, scalable vector style, no decorative elements, no shadows, no extra text`,
-        dalle: `Luxury modern logo for "${businessName}" — ${industry} brand. Geometric symbol combined with elegant sans-serif wordmark. Monochrome, scalable, white background. No decorative elements, no shadows.`
+        replicate: `Modern luxury logo for "${businessName}", ${industry} brand. Business: ${description}. Audience: ${audience}. Abstract geometric symbol inspired by the industry and service, combined with elegant sans-serif wordmark. Monochrome black on white, scalable vector style, no decorative elements, no shadows`,
+        dalle: `Luxury modern logo for "${businessName}" — ${industry} brand that ${description}. Geometric symbol inspired by the business concept combined with elegant sans-serif wordmark. Monochrome, scalable, white background. No decorative elements, no shadows.`
       },
       {
-        replicate: `Creative minimal logo mark for "${businessName}", ${industry} sector, flat icon representing innovation and trust, white background, strong visual identity, suitable for app icon and business card, clean vector design, no gradients`,
-        dalle: `Creative brand identity logo for "${businessName}". Industry: ${industry}. Abstract icon that represents innovation and trust. Flat vector style, white background, strong visual identity, suitable for app icon and business card.`
+        replicate: `Creative minimal logo mark for "${businessName}", ${industry} sector. What they do: ${description}. Flat icon that captures the essence of this specific business, white background, strong visual identity, suitable for app icon and business card, clean vector design, no gradients`,
+        dalle: `Creative brand identity logo for "${businessName}". Industry: ${industry}. Business: ${description}. Abstract icon that captures the essence of what this business does. Flat vector style, white background, strong visual identity, suitable for app icon and business card.`
       }
     ];
 
