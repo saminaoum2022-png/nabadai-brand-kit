@@ -22,8 +22,8 @@ async function generateWithReplicate(prompt, negativePrompt) {
     });
 
     console.log('Replicate status:', startRes.status);
-const prediction = await startRes.json();
-console.log('Replicate response:', JSON.stringify(prediction));
+    const prediction = await startRes.json();
+    console.log('Replicate response:', JSON.stringify(prediction));
 
     if (!prediction.id) throw new Error('No prediction ID from Replicate');
 
@@ -68,10 +68,28 @@ async function generateImage(replicatePrompt, dallePrompt, negativePrompt) {
   return await generateWithDalle(dallePrompt);
 }
 
+function buildLogoConfig(businessName, industry, description, audience, logoStyle, logoSymbol, inspirationBrands, avoidInLogo) {
+  const style = logoStyle || 'Minimal';
+  const symbol = logoSymbol || 'Abstract icon';
+  const inspiration = inspirationBrands ? `Inspired by the design style of: ${inspirationBrands}.` : '';
+  const avoid = avoidInLogo ? `Avoid: ${avoidInLogo}.` : '';
+
+  const negativePrompt = `photorealistic, 3d render, shadows, gradients, clipart, watermark, blurry, low quality, extra text, random letters, distorted shapes, cartoon, illustration style, busy background, multiple colors, neon, glow effects, badge, shield, ribbon${avoidInLogo ? ', ' + avoidInLogo : ''}`;
+
+  const replicatePrompt = `${style} flat vector logo for "${businessName}", a ${industry} brand. Business: ${description}. Target audience: ${audience}. Symbol type: ${symbol} that visually represents the core essence of this business. ${inspiration} ${avoid} White background, bold geometric shapes, no gradients, no shadows, print ready, professional brand identity, single color mark above clean wordmark.`;
+
+  const dallePrompt = `${style} professional vector logo for "${businessName}" — a ${industry} brand. ${description}. Symbol: ${symbol} representing the business concept. ${inspiration} ${avoid} Flat design, white background, no gradients, bold shapes, high contrast, print-ready, clean wordmark below icon.`;
+
+  return { replicate: replicatePrompt, dalle: dallePrompt, negative: negativePrompt };
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { businessName, industry, description, audience, budget, businessType, productType } = req.body;
+  const {
+    businessName, industry, description, audience, budget, businessType, productType,
+    logoStyle, logoSymbol, inspirationBrands, avoidInLogo, mockupType
+  } = req.body;
 
   try {
     const brandKit = await openai.chat.completions.create({
@@ -103,6 +121,10 @@ Target Audience: ${audience}
 Budget Range: ${budget}
 Type: ${businessType} (product or service)
 ${productType ? `Product Type: ${productType}` : ''}
+${logoStyle ? `Logo Style Preference: ${logoStyle}` : ''}
+${logoSymbol ? `Logo Symbol Preference: ${logoSymbol}` : ''}
+${inspirationBrands ? `Brand Inspirations: ${inspirationBrands}` : ''}
+${avoidInLogo ? `Avoid in Logo: ${avoidInLogo}` : ''}
 
 Return ONLY valid JSON in this exact format:
 {
@@ -161,31 +183,18 @@ Return ONLY valid JSON in this exact format:
 
     const kitData = JSON.parse(brandKit.choices[0].message.content);
 
-    const logoNegativePrompt = "photorealistic, 3d render, shadows, gradients, clipart, watermark, blurry, low quality, extra text, random letters, distorted shapes, cartoon, illustration style, busy background, multiple colors, neon, glow effects, badge, shield, ribbon";
-
-    const logoConfigs = [
-      {
-        replicate: `Minimal flat vector logo for "${businessName}", a ${industry} brand described as: ${description}. Target audience: ${audience}. Single icon mark that visually represents the core service/product, above clean wordmark. White background, bold geometric shapes, no gradients, no shadows, print ready, professional brand identity`,
-        dalle: `Professional minimal vector logo for "${businessName}", a ${industry} company: ${description}. The icon should visually represent what the business does. Clean icon mark plus wordmark. Flat design, white background, no gradients, bold shapes. High contrast, print-ready.`
-      },
-      {
-        replicate: `Modern luxury logo for "${businessName}", ${industry} brand. Business: ${description}. Audience: ${audience}. Abstract geometric symbol inspired by the industry and service, combined with elegant sans-serif wordmark. Monochrome black on white, scalable vector style, no decorative elements, no shadows`,
-        dalle: `Luxury modern logo for "${businessName}" — ${industry} brand that ${description}. Geometric symbol inspired by the business concept combined with elegant sans-serif wordmark. Monochrome, scalable, white background. No decorative elements, no shadows.`
-      },
-      {
-        replicate: `Creative minimal logo mark for "${businessName}", ${industry} sector. What they do: ${description}. Flat icon that captures the essence of this specific business, white background, strong visual identity, suitable for app icon and business card, clean vector design, no gradients`,
-        dalle: `Creative brand identity logo for "${businessName}". Industry: ${industry}. Business: ${description}. Abstract icon that captures the essence of what this business does. Flat vector style, white background, strong visual identity, suitable for app icon and business card.`
-      }
-    ];
-
-    const logoImages = await Promise.all(
-      logoConfigs.map(config => generateImage(config.replicate, config.dalle, logoNegativePrompt))
+    // Generate 1 specific logo
+    const logoConfig = buildLogoConfig(
+      businessName, industry, description, audience,
+      logoStyle, logoSymbol, inspirationBrands, avoidInLogo
     );
+    const logoUrl = await generateImage(logoConfig.replicate, logoConfig.dalle, logoConfig.negative);
 
-    kitData.logos = logoImages;
+    kitData.logos = [logoUrl];
     kitData.businessName = businessName;
     kitData.businessType = businessType;
     kitData.industry = industry;
+    kitData.mockupType = mockupType || null;
 
     res.status(200).json({ success: true, data: kitData });
 
