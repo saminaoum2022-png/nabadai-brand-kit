@@ -16,12 +16,35 @@ export default function Result() {
     const { default: jsPDF } = await import('jspdf');
     const { default: html2canvas } = await import('html2canvas');
     const element = document.getElementById('brand-kit-content');
-    const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      scrollY: 0,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
+    });
+
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+    heightLeft -= pdfHeight;
+
+    while (heightLeft > 0) {
+      position -= pdfHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+    }
+
     pdf.save(`${kit.businessName}-brand-kit.pdf`);
   };
 
@@ -30,6 +53,18 @@ export default function Result() {
       Loading your brand kit...
     </div>
   );
+
+  const mockupLabel = kit.mockupType ? {
+    website_hero: '🖥️ Website Hero Mockup',
+    instagram_post: '📱 Instagram Post Mockup',
+    business_card: '💼 Business Card Mockup',
+    packaging: '📦 Packaging Mockup',
+    product_shot: '🛍️ Product Shot Mockup',
+    ecommerce_listing: '🛒 E-commerce Listing Mockup',
+    proposal_cover: '📄 Proposal Cover Mockup',
+    email_header: '📧 Email Header Mockup',
+    ad_banner: '🎯 Ad Banner Mockup',
+  }[kit.mockupType] : 'Mockup';
 
   return (
     <>
@@ -104,7 +139,7 @@ export default function Result() {
           </Section>
 
           {/* Logo Concepts */}
-          <Section title="Logo Concepts">
+          <Section title="Logo Concept">
             <div style={s.grid3}>
               {kit.logos?.map((url, i) => (
                 <div key={i} style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #e8eaf0', background: '#f8f9fc' }}>
@@ -184,18 +219,14 @@ export default function Result() {
             </div>
           </Section>
 
-          {/* Product Mockups */}
+          {/* Mockup — single, dynamic title */}
           {kit.mockups && kit.mockups.length > 0 && (
-            <Section title="Product Mockups">
-              <div style={s.grid3}>
-                {kit.mockups.map((url, i) => (
-                  <div key={i} style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #e8eaf0' }}>
-                    <img src={url} alt={`Mockup ${i + 1}`} style={{ width: '100%', display: 'block' }} crossOrigin="anonymous" />
-                    <div style={{ background: '#fff', padding: '10px', textAlign: 'center', borderTop: '1px solid #e8eaf0' }}>
-                      <a href={url} download={`mockup-${i + 1}.png`} style={{ color: '#1a237e', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>⬇ Download</a>
-                    </div>
-                  </div>
-                ))}
+            <Section title={mockupLabel}>
+              <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #e8eaf0', background: '#f8f9fc' }}>
+                <img src={kit.mockups[0]} alt="Mockup" style={{ width: '100%', display: 'block' }} crossOrigin="anonymous" />
+                <div style={{ background: '#fff', padding: '10px', textAlign: 'center', borderTop: '1px solid #e8eaf0' }}>
+                  <a href={kit.mockups[0]} download="mockup.png" style={{ color: '#1a237e', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>⬇ Download Mockup</a>
+                </div>
               </div>
               {kit.productDeliverables && (
                 <div style={{ ...s.card, marginTop: 16 }}>
