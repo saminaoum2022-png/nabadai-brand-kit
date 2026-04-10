@@ -185,7 +185,7 @@ export default function Result() {
           </Section>
 
           {/* Product Mockups */}
-          {kit.businessType === 'product' && kit.mockups && (
+          {kit.mockups && kit.mockups.length > 0 && (
             <Section title="Product Mockups">
               <div style={s.grid3}>
                 {kit.mockups.map((url, i) => (
