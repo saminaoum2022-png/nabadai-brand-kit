@@ -21,10 +21,7 @@ async function generateWithReplicate(prompt, negativePrompt) {
       })
     });
 
-    console.log('Replicate status:', startRes.status);
     const prediction = await startRes.json();
-    console.log('Replicate response:', JSON.stringify(prediction));
-
     if (!prediction.id) throw new Error('No prediction ID from Replicate');
 
     let result;
@@ -64,23 +61,51 @@ async function generateWithDalle(prompt) {
 async function generateImage(replicatePrompt, dallePrompt, negativePrompt) {
   const replicateUrl = await generateWithReplicate(replicatePrompt, negativePrompt);
   if (replicateUrl) return replicateUrl;
-  console.log('Using DALL-E fallback...');
   return await generateWithDalle(dallePrompt);
 }
 
-function buildLogoConfig(businessName, industry, description, audience, logoStyle, logoSymbol, inspirationBrands, avoidInLogo) {
+function buildLogoConfig(businessName, industry, description, audience, logoStyle, logoSymbol, inspirationBrands, avoidInLogo, colors) {
   const style = logoStyle || 'Minimal';
   const symbol = logoSymbol || 'Abstract icon';
   const inspiration = inspirationBrands ? `Inspired by the design style of: ${inspirationBrands}.` : '';
   const avoid = avoidInLogo ? `Avoid: ${avoidInLogo}.` : '';
 
-  const negativePrompt = `photorealistic, 3d render, shadows, gradients, clipart, watermark, blurry, low quality, extra text, random letters, distorted shapes, cartoon, illustration style, busy background, multiple colors, neon, glow effects, badge, shield, ribbon${avoidInLogo ? ', ' + avoidInLogo : ''}`;
+  // Extract palette colors for logo
+  const primaryHex = colors?.[0]?.hex || '#1a237e';
+  const secondaryHex = colors?.[1]?.hex || '#4fc3f7';
+  const colorInstruction = `Use ONLY these brand colors in the logo: primary ${primaryHex} and secondary ${secondaryHex}.`;
 
-  const replicatePrompt = `${style} flat vector logo for "${businessName}", a ${industry} brand. Business: ${description}. Target audience: ${audience}. Symbol type: ${symbol} that visually represents the core essence of this business. ${inspiration} ${avoid} White background, bold geometric shapes, no gradients, no shadows, print ready, professional brand identity, single color mark above clean wordmark.`;
+  const negativePrompt = `white background, colored background, background fill, photorealistic, 3d render, shadows, gradients, clipart, watermark, blurry, low quality, extra text, random letters, distorted shapes, cartoon, illustration style, busy background, neon, glow effects, badge, shield, ribbon${avoidInLogo ? ', ' + avoidInLogo : ''}`;
 
-  const dallePrompt = `${style} professional vector logo for "${businessName}" — a ${industry} brand. ${description}. Symbol: ${symbol} representing the business concept. ${inspiration} ${avoid} Flat design, white background, no gradients, bold shapes, high contrast, print-ready, clean wordmark below icon.`;
+  const replicatePrompt = `${style} flat vector logo for "${businessName}", a ${industry} brand. Business: ${description}. Target audience: ${audience}. Symbol type: ${symbol} that visually represents the core essence of this business. ${colorInstruction} ${inspiration} ${avoid} TRANSPARENT background, bold geometric shapes, no gradients, no shadows, print ready, professional brand identity, single color mark above clean wordmark. PNG with transparency.`;
+
+  const dallePrompt = `${style} professional vector logo for "${businessName}" — a ${industry} brand. ${description}. Symbol: ${symbol} representing the business concept. ${colorInstruction} ${inspiration} ${avoid} TRANSPARENT background (no white fill, no colored background), flat design, no gradients, bold shapes, high contrast, print-ready, clean wordmark below icon. The background must be fully transparent.`;
 
   return { replicate: replicatePrompt, dalle: dallePrompt, negative: negativePrompt };
+}
+
+function buildMockupPrompt(businessName, industry, description, mockupType, businessType, productType, colors) {
+  const primaryHex = colors?.[0]?.hex || '#1a237e';
+  const secondaryHex = colors?.[1]?.hex || '#4fc3f7';
+  const accentHex = colors?.[2]?.hex || '#e8eaf0';
+  const colorInstruction = `Use ONLY these exact brand colors: ${primaryHex} as primary, ${secondaryHex} as secondary, ${accentHex} as accent.`;
+
+  const mockupPrompts = {
+    website_hero: `Premium website hero section mockup for "${businessName}" — ${industry} brand. ${colorInstruction} Clean desktop browser frame, hero headline, CTA button in brand colors, professional layout. Photorealistic UI mockup.`,
+    instagram_post: `Instagram post mockup for "${businessName}" — ${industry} brand. ${colorInstruction} Square format, branded typography, lifestyle imagery relevant to ${description}. Premium social media aesthetic.`,
+    business_card: `Premium business card mockup for "${businessName}" — ${industry}. ${colorInstruction} Both sides shown, embossed logo, clean typography, luxury finish. Studio lighting, white surface.`,
+    packaging: `Product packaging mockup for "${businessName}" — ${productType || industry}. ${colorInstruction} Premium unboxing experience, branded box/bag/container relevant to ${productType || 'the product'}. Studio lighting, clean background.`,
+    product_shot: `Professional product photography mockup for "${businessName}" — ${productType || industry}. ${colorInstruction} Hero product shot, lifestyle context relevant to ${description}. Premium commercial photography style.`,
+    ecommerce_listing: `E-commerce product listing mockup for "${businessName}" on a premium marketplace. ${colorInstruction} Product image, title, price, reviews, add to cart button. Clean UI, professional layout.`,
+    proposal_cover: `Professional proposal cover page for "${businessName}" — ${industry} services. ${colorInstruction} Executive presentation style, company name, tagline, premium typography. A4 format.`,
+    email_header: `Email newsletter header mockup for "${businessName}" — ${industry}. ${colorInstruction} Branded header banner, logo placement, headline text. Clean email template style.`,
+    ad_banner: `Digital advertising banner for "${businessName}" — ${industry}. ${colorInstruction} Compelling headline, CTA button, product/service visual. Premium ad creative, multiple sizes shown.`,
+  };
+
+  const prompt = mockupPrompts[mockupType] || `Professional brand mockup for "${businessName}" — ${industry}. ${colorInstruction} Premium presentation, clean background.`;
+  const negative = 'blurry, low quality, watermark, distorted, amateur, generic, wrong colors, white background only';
+
+  return { replicate: prompt, dalle: prompt, negative };
 }
 
 export default async function handler(req, res) {
@@ -107,9 +132,10 @@ CRITICAL RULES — NEVER BREAK THESE:
 - Hashtags must be niche-specific — never generic like #business #success #entrepreneur
 - Competitor gaps must reflect REAL gaps in THIS specific industry
 - Color choices must reflect the psychology of THIS industry and audience
-- Typography must match the brand personality — not just "clean and modern"
+- Typography must be UNIQUE per industry — never default to "Inter" or "Montserrat" for every brand. A luxury jewelry brand needs different fonts than a tech startup or a food brand. Pick fonts that are SPECIFIC to the brand personality.
 - If any section feels generic, you have failed the task
-- Think deeply about what makes THIS business unique before writing anything`
+- Think deeply about what makes THIS business unique before writing anything
+- For brandScore: score honestly based on the inputs provided — clarity of concept, audience definition, market differentiation, name strength, and description quality`
       }, {
         role: 'user',
         content: `Generate a complete brand kit for this business:
@@ -136,8 +162,8 @@ Return ONLY valid JSON in this exact format:
     {"name": "Dark", "hex": "#XXXXXX", "usage": "Specific usage for THIS brand"}
   ],
   "typography": [
-    {"role": "Heading Font", "name": "Font Name", "style": "Why this font fits THIS brand specifically", "pairedWith": "Body font name"},
-    {"role": "Body Font", "name": "Font Name", "style": "Why this font fits THIS brand specifically", "pairedWith": "Heading font name"}
+    {"role": "Heading Font", "name": "Google Font name specific to this brand personality", "style": "Why this font fits THIS brand specifically — not generic reasons", "pairedWith": "Body font name"},
+    {"role": "Body Font", "name": "Google Font name specific to this brand personality", "style": "Why this font fits THIS brand specifically — not generic reasons", "pairedWith": "Heading font name"}
   ],
   "slogans": ["Slogan unique to ${businessName}", "Slogan unique to ${businessName}", "Slogan unique to ${businessName}"],
   "brandVoice": {
@@ -146,11 +172,25 @@ Return ONLY valid JSON in this exact format:
     "dontList": ["Specific dont for THIS brand", "Specific dont for THIS brand"],
     "captions": ["Caption specific to ${businessName}", "Caption specific to ${businessName}", "Caption specific to ${businessName}", "Caption specific to ${businessName}", "Caption specific to ${businessName}"]
   },
+  "brandScore": {
+    "total": <number 0-100>,
+    "breakdown": [
+      {"label": "Concept Clarity", "score": <0-100>},
+      {"label": "Audience Definition", "score": <0-100>},
+      {"label": "Market Differentiation", "score": <0-100>},
+      {"label": "Name Strength", "score": <0-100>}
+    ],
+    "tip": "One specific actionable tip to improve their brand score"
+  },
+  "competitiveEdge": {
+    "idea": "One bold, creative, specific idea that will make ${businessName} stand out from ALL competitors in ${industry}",
+    "explanation": "Why this specific idea works for THIS brand, THIS audience, and THIS market — with concrete reasoning"
+  },
   "legal": {
     "trademarkAdvice": "Specific trademark advice for ${industry} industry",
     "businessStructure": "Recommended structure for THIS type of business in THIS industry",
     "ipProtection": ["Specific IP tip for ${industry}", "Specific IP tip for ${industry}", "Specific IP tip for ${industry}"],
-    "termsHighlights": ["Specific term for ${businessType} business", "Specific term for ${businessType} business", "Specific term for ${businessType} business"],
+    "termsHighlights": ["Specific term for ${businessType} business", "Specific term for ${businessType} business"],
     "privacyHighlights": ["Privacy point specific to ${industry}", "Privacy point specific to ${industry}"]
   },
   "marketing": {
@@ -183,14 +223,25 @@ Return ONLY valid JSON in this exact format:
 
     const kitData = JSON.parse(brandKit.choices[0].message.content);
 
-    // Generate 1 specific logo
+    // Generate logo using palette colors
     const logoConfig = buildLogoConfig(
       businessName, industry, description, audience,
-      logoStyle, logoSymbol, inspirationBrands, avoidInLogo
+      logoStyle, logoSymbol, inspirationBrands, avoidInLogo,
+      kitData.colors
     );
     const logoUrl = await generateImage(logoConfig.replicate, logoConfig.dalle, logoConfig.negative);
-
     kitData.logos = [logoUrl];
+
+    // Generate mockup using palette colors
+    if (mockupType) {
+      const mockupConfig = buildMockupPrompt(
+        businessName, industry, description, mockupType,
+        businessType, productType, kitData.colors
+      );
+      const mockupUrl = await generateImage(mockupConfig.replicate, mockupConfig.dalle, mockupConfig.negative);
+      kitData.mockups = [mockupUrl];
+    }
+
     kitData.businessName = businessName;
     kitData.businessType = businessType;
     kitData.industry = industry;
